@@ -19,11 +19,12 @@ class CustomerDetailScreen extends StatefulWidget {
 
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   Map<String, dynamic>? _customer;
   Map<String, dynamic>? _riskAnalysis;
   Map<String, dynamic>? _behaviorAnalysis;
+  String? _userRole;
   bool _isLoading = true;
 
   @override
@@ -38,11 +39,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     if (token != null) {
       try {
         final data = await _apiService.getCustomerDetail(widget.customerId, token);
+        final role = await _storage.read(key: 'user_role');
         final risk = await _apiService.getRiskScore(widget.customerId, token);
         final behavior = await _apiService.getCustomerBehaviorAnalytics(widget.customerId, token);
         if (mounted) {
           setState(() {
             _customer = data;
+            _userRole = role;
             _riskAnalysis = risk;
             _behaviorAnalysis = behavior;
             _isLoading = false;
@@ -434,8 +437,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   bool _isAdmin() {
-     // Allow both admin and workers to see these controls as they are operational field staff
-    return true; 
+    return _userRole == 'admin'; 
   }
 
   Widget _buildStatusBadge(String status) {
@@ -569,7 +571,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 ],
               ),
               Icon(
-                loan['status'].toString().toUpperCase() == 'ACTIVE' ? Icons.verified_user : Icons.hourglass_top_rounded, 
+                loan['status'].toString().toLowerCase() == 'active' 
+                    ? Icons.verified_user 
+                    : (loan['status'].toString().toLowerCase() == 'approved' 
+                        ? Icons.hourglass_top_rounded 
+                        : Icons.edit_note_rounded), 
                 color: Colors.white, 
                 size: 28
               ),
@@ -580,8 +586,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _loanStats("Principal", "₹${loan['amount']}"),
-              _loanStats("Interest", "${loan['interest_rate']}%"),
-              _loanStats("Tenure", "${loan['tenure']} ${loan['tenure_unit']}"),
+              if (loan['status'].toString().toLowerCase() == 'created')
+                _loanStats("Status", "DRAFT")
+              else ...[
+                _loanStats("Interest", "${loan['interest_rate']}%"),
+                _loanStats("Tenure", "${loan['tenure']} ${loan['tenure_unit']}"),
+              ]
             ],
           ),
           const SizedBox(height: 20),
@@ -590,15 +600,32 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               if (loan['status'].toString().toLowerCase() == 'approved')
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
+                    padding: const EdgeInsets.only(right: 4.0),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.greenAccent[400],
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: EdgeInsets.zero,
                       ),
                       onPressed: () => _activateLoan(loan['id']),
-                      child: const Text("ACTIVATE", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text("ACTIVATE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                    ),
+                  ),
+                ),
+              if (loan['status'].toString().toLowerCase() == 'created' && _isAdmin())
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orangeAccent[100],
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: EdgeInsets.zero,
+                      ),
+                      onPressed: () => _approveLoan(loan['id']),
+                      child: const Text("APPROVE", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                     ),
                   ),
                 ),
@@ -625,19 +652,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () => _viewSchedule(loan['id']),
-                  child: const Text("View EMI", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text("EMI", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[100],
+                    backgroundColor: Colors.orange[50],
                     foregroundColor: Colors.orange[900],
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: EdgeInsets.zero,
                   ),
                   onPressed: () => _viewDocuments(loan['id'], loan['loan_id']),
-                  child: const Text("Documents", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                  child: const Text("DOCS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
                 ),
               ),
             ],
@@ -645,6 +673,27 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _approveLoan(int loanId) async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token != null) {
+      try {
+        final result = await _apiService.approveLoan(loanId, {}, token);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['msg'] ?? 'Loan Approved!'), backgroundColor: Colors.green),
+          );
+          _fetchDetails();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
   }
 
   Widget _loanStats(String label, String value) {

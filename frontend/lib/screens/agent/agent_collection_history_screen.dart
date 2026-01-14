@@ -14,7 +14,7 @@ class AgentCollectionHistoryScreen extends StatefulWidget {
 
 class _AgentCollectionHistoryScreenState extends State<AgentCollectionHistoryScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _history = [];
   bool _isLoading = true;
 

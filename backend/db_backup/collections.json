@@ -1,0 +1,98 @@
+[
+    {
+        "id": 1,
+        "loan_id": 1,
+        "agent_id": 5,
+        "line_id": null,
+        "amount": 1000.0,
+        "payment_mode": "cash",
+        "status": "approved",
+        "latitude": 13.0646,
+        "longitude": 80.2193,
+        "created_at": "2025-12-29T17:12:42"
+    },
+    {
+        "id": 2,
+        "loan_id": 1,
+        "agent_id": 5,
+        "line_id": null,
+        "amount": 1000.0,
+        "payment_mode": "cash",
+        "status": "rejected",
+        "latitude": 13.0646,
+        "longitude": 80.2193,
+        "created_at": "2025-12-29T17:13:08"
+    },
+    {
+        "id": 3,
+        "loan_id": 1,
+        "agent_id": 1,
+        "line_id": null,
+        "amount": 1500.0,
+        "payment_mode": "cash",
+        "status": "approved",
+        "latitude": 11.0264,
+        "longitude": 76.9786,
+        "created_at": "2026-01-08T17:01:09"
+    },
+    {
+        "id": 4,
+        "loan_id": 1,
+        "agent_id": 5,
+        "line_id": null,
+        "amount": 300.0,
+        "payment_mode": "cash",
+        "status": "approved",
+        "latitude": 11.0264,
+        "longitude": 76.9786,
+        "created_at": "2026-01-08T17:08:23"
+    },
+    {
+        "id": 5,
+        "loan_id": 1,
+        "agent_id": 5,
+        "line_id": null,
+        "amount": 100.0,
+        "payment_mode": "cash",
+        "status": "approved",
+        "latitude": 11.0264,
+        "longitude": 76.9786,
+        "created_at": "2026-01-08T17:17:08"
+    },
+    {
+        "id": 6,
+        "loan_id": 1,
+        "agent_id": 5,
+        "line_id": null,
+        "amount": 100.0,
+        "payment_mode": "cash",
+        "status": "approved",
+        "latitude": 11.0494,
+        "longitude": 78.0501,
+        "created_at": "2026-01-09T03:50:04"
+    },
+    {
+        "id": 7,
+        "loan_id": 1,
+        "agent_id": 3,
+        "line_id": 1,
+        "amount": 300.0,
+        "payment_mode": "cash",
+        "status": "approved",
+        "latitude": 9.9252,
+        "longitude": 78.1198,
+        "created_at": "2026-01-13T10:50:24"
+    },
+    {
+        "id": 8,
+        "loan_id": 1,
+        "agent_id": 3,
+        "line_id": 1,
+        "amount": 100.0,
+        "payment_mode": "cash",
+        "status": "pending",
+        "latitude": 9.9252,
+        "longitude": 78.1198,
+        "created_at": "2026-01-13T11:16:06"
+    }
+]

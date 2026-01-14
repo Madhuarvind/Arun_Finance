@@ -5,6 +5,7 @@ import '../utils/localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'line_report_screen.dart';
+import '../widgets/add_customer_dialog.dart';
 
 class AgentLinesScreen extends StatefulWidget {
   const AgentLinesScreen({super.key});
@@ -15,7 +16,7 @@ class AgentLinesScreen extends StatefulWidget {
 
 class _AgentLinesScreenState extends State<AgentLinesScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _lines = [];
   bool _isLoading = true;
 
@@ -108,6 +109,7 @@ class _LineCustomersSheet extends StatefulWidget {
 class _LineCustomersSheetState extends State<_LineCustomersSheet> {
   List<dynamic> _pendingCustomers = [];
   List<dynamic> _collectedCustomers = [];
+  List<dynamic> _allCustomers = [];
   bool _isLoading = true;
   double _totalCollected = 0;
   double _totalCash = 0;
@@ -124,16 +126,18 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
     try {
       final token = await widget.storage.read(key: 'jwt_token');
       if (token != null) {
-        // 1. Fetch all customers in this line
-        final custs = await widget.apiService.getLineCustomers(widget.line['id'], token);
+        // 1. Fetch all customers in this line (now includes is_collected_today)
+        final List<dynamic> custs = await widget.apiService.getLineCustomers(widget.line['id'], token);
         
-        // 2. Fetch today's collections to see who already paid
-        final history = await widget.apiService.getCollectionHistory(token);
-        
-        final today = DateTime.now();
         double collected = 0;
         double cash = 0;
         double upi = 0;
+
+        // Since the UI needs to show WHO collected today, we still might want history for the amounts,
+        // or we can rely on the fact that 'collected' is just for summary.
+        // Let's keep a simplified history fetch just for the summary stats.
+        final history = await widget.apiService.getCollectionHistory(token);
+        final today = DateTime.now();
 
         final dailyCollections = history.where((c) {
           final dateStr = c['time'] ?? c['created_at'];
@@ -144,8 +148,6 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
           } catch(e) { return false; }
         }).toList();
 
-        final collectedIdMap = {for (var c in dailyCollections) (c['customer_id'] ?? c['customer']): c};
-
         for (var c in dailyCollections) {
           final amt = (c['amount'] ?? 0).toDouble();
           collected += amt;
@@ -153,13 +155,15 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
           if (c['payment_mode'] == 'upi') upi += amt;
         }
 
+        // Filter out customers already in the line
+        final allCusts = await widget.apiService.getCustomers(token);
+        final existingIds = custs.map((lc) => lc['id']).toSet();
+
         if (mounted) {
           setState(() {
-            _collectedCustomers = custs.where((c) => collectedIdMap.containsKey(c['id'])).map((c) {
-               final coll = collectedIdMap[c['id']];
-               return {...c as Map<String, dynamic>, 'amount': coll['amount'], 'mode': coll['payment_mode']};
-            }).toList();
-            _pendingCustomers = custs.where((c) => !collectedIdMap.containsKey(c['id'])).toList();
+            _collectedCustomers = custs.where((c) => c['is_collected_today'] == true).toList();
+            _pendingCustomers = custs.where((c) => c['is_collected_today'] == false).toList();
+            _allCustomers = allCusts.where((c) => !existingIds.contains(c['id'])).toList();
             _totalCollected = collected;
             _totalCash = cash;
             _totalUpi = upi;
@@ -226,9 +230,24 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                       Text(widget.line['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold)),
                       _isLoading 
                         ? const Text("Loading...", style: TextStyle(fontSize: 12, color: Colors.grey))
-                        : Text(
-                            "${_collectedCustomers.length} / ${_pendingCustomers.length + _collectedCustomers.length} Collected Today",
-                            style: const TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                        : Row(
+                            children: [
+                              Text(
+                                "${_collectedCustomers.length} / ${_pendingCustomers.length + _collectedCustomers.length} Collected Today",
+                                style: const TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                              ),
+                              if (widget.line['start_time'] != null && widget.line['end_time'] != null) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                                  child: Text(
+                                    "${widget.line['start_time']} - ${widget.line['end_time']}",
+                                    style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                     ],
                   ),
@@ -252,6 +271,16 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                 _buildReportButton(context, Icons.summarize_rounded, "Daily Report", 'daily'),
                 const SizedBox(width: 8),
                 _buildReportButton(context, Icons.calendar_view_week_rounded, "Weekly Report", 'weekly'),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _addCustomer,
+                  icon: const Icon(Icons.person_add_rounded, size: 18, color: Colors.blue),
+                  label: const Text("Add Customer", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -330,23 +359,53 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: (isPending ? AppTheme.primaryColor : Colors.green).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: isPending ? AppTheme.primaryColor.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
               child: Center(
-                child: Text(
-                  (index + 1).toString(),
-                  style: TextStyle(
-                    color: isPending ? AppTheme.primaryColor : Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: (cust['loan_count'] ?? 1) > 1
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "${(cust['active_loans'] as List).where((l) => l['is_collected'] == true).length}",
+                            style: TextStyle(
+                              color: isPending ? AppTheme.primaryColor : Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Container(height: 1, width: 20, color: Colors.grey.withValues(alpha: 0.3)),
+                          Text(
+                            "${cust['loan_count']}",
+                            style: const TextStyle(color: Colors.grey, fontSize: 10),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        (index + 1).toString(),
+                        style: TextStyle(
+                          color: isPending ? AppTheme.primaryColor : Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
-            title: Text(cust['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            title: Row(
+              children: [
+                Expanded(child: Text(cust['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+                if ((cust['loan_count'] ?? 0) > 1)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
+                    child: Text("${cust['loan_count']} Loans", style: TextStyle(fontSize: 10, color: Colors.blue.shade900, fontWeight: FontWeight.bold)),
+                  ),
+              ],
+            ),
             subtitle: Text(cust['area'] ?? 'No Area', style: const TextStyle(fontSize: 12, color: Colors.grey)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -354,18 +413,43 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                 IconButton(
                   icon: const Icon(Icons.qr_code_2_rounded, color: Colors.blue, size: 20),
                   onPressed: () {
-                     // Open customer detail directly to the Passbook section or show QR dialog
-                     // For simplicity, we'll navigate to detail and then they can tap the button there
-                     // Or even better, let's just navigate to the detail screen as it's the source of truth
-                     Navigator.pushNamed(context, '/admin/customer_detail', arguments: cust['id']);
+                      Navigator.pushNamed(context, '/admin/customer_detail', arguments: cust['id']);
                   },
                 ),
                 isPending 
-                    ? const Icon(Icons.add_circle_outline, color: AppTheme.primaryColor)
+                    ? Icon(
+                        (cust['loan_count'] ?? 1) > 1 && (cust['active_loans'] as List).any((l) => l['is_collected'] == true)
+                          ? Icons.add_circle // Partial icon
+                          : Icons.add_circle_outline, 
+                        color: AppTheme.primaryColor
+                      )
                     : const Icon(Icons.check_circle, color: Colors.green),
               ],
             ),
             onTap: isPending ? () {
+              // Time Window Check
+              final start = widget.line['start_time'];
+              final end = widget.line['end_time'];
+              bool isWindowOpen = true;
+
+              if (start != null && end != null) {
+                final now = DateTime.now();
+                final nowStr = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+                if (nowStr.compareTo(start) < 0 || nowStr.compareTo(end) > 0) {
+                  isWindowOpen = false;
+                }
+              }
+
+              if (!isWindowOpen) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("${AppLocalizations.of(context).translate('collection_window_closed')}: $start - $end"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
               Navigator.pop(context); // Close sheet
               Navigator.pushNamed(context, '/collection_entry', arguments: {
                 ...cust,
@@ -495,6 +579,106 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _addCustomer() async {
+    String searchQuery = '';
+    
+    return showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final filtered = _allCustomers.where((c) => 
+            c['name'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+            c['mobile_number'].contains(searchQuery)
+          ).toList();
+
+          return AlertDialog(
+            title: Text(AppLocalizations.of(dialogContext).translate('add_customer')),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 400,
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(dialogContext).translate('search_users'),
+                      prefixIcon: const Icon(Icons.search),
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (val) => setDialogState(() => searchQuery = val),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(AppLocalizations.of(dialogContext).translate('no_customers_found')),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    final result = await showDialog(
+                                      context: dialogContext,
+                                      builder: (subDialogContext) => const AddCustomerDialog(),
+                                    );
+                                    if (result == true) {
+                                      if (!dialogContext.mounted) return;
+                                      Navigator.pop(dialogContext);
+                                      _fetchData();
+                                    }
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text("Create New Customer"),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (c, i) => const Divider(),
+                            itemBuilder: (c, i) {
+                              final cust = filtered[i];
+                              return ListTile(
+                                title: Text(cust['name']),
+                                subtitle: Text(cust['mobile_number'] ?? ''),
+                                trailing: const Icon(Icons.add_circle_outline, color: Colors.blue),
+                                onTap: () async {
+                                  Navigator.pop(dialogContext);
+                                  _submitAddCustomer(cust['id']);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(AppLocalizations.of(dialogContext).translate('cancel')),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _submitAddCustomer(int customerId) async {
+    setState(() => _isLoading = true);
+    final token = await widget.storage.read(key: 'jwt_token');
+    if (token != null) {
+      final res = await widget.apiService.addCustomerToLine(widget.line['id'], customerId, token);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['msg'] ?? 'Added successfully')),
+        );
+        _fetchData();
+      }
+    }
   }
 
   Widget _buildReportButton(BuildContext context, IconData icon, String label, String period) {

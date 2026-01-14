@@ -12,7 +12,7 @@ class DatabaseViewerScreen extends StatefulWidget {
 
 class _DatabaseViewerScreenState extends State<DatabaseViewerScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   String _selectedTable = 'Users';
   final List<String> _tables = [

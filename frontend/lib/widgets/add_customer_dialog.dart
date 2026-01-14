@@ -18,7 +18,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
   final _addressController = TextEditingController();
   final _idProofController = TextEditingController();
   final _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   bool _isLoading = false;
 
   @override

@@ -17,7 +17,7 @@ class LineCustomersScreen extends StatefulWidget {
 
 class _LineCustomersScreenState extends State<LineCustomersScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _lineCustomers = [];
   List<dynamic> _allCustomers = [];
   bool _isLoading = true;
@@ -66,7 +66,10 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
         }
 
         setState(() {
-          _lineCustomers = lineCusts;
+          // ENSURE UNIQUE CUSTOMERS TO PREVENT GlobalKey ERRORS
+          final seenIds = <int>{};
+          _lineCustomers = lineCusts.where((c) => seenIds.add(c['id'] as int)).toList();
+          
           _collectedCustomers = _lineCustomers.where((c) => collectedIdMap.containsKey(c['id'])).map((c) {
              final coll = collectedIdMap[c['id']];
              return {...c as Map<String, dynamic>, 'amount': coll['amount'], 'mode': coll['payment_mode']};
@@ -89,6 +92,40 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error fetching data: $e')),
         );
+      }
+    }
+  }
+
+  Future<void> _removeCustomer(int customerId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Remove Customer"),
+        content: const Text("Are you sure you want to remove this customer from the line?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text("Remove"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final token = await _storage.read(key: 'jwt_token');
+        if (token != null) {
+          final res = await _apiService.removeCustomerFromLine(widget.line['id'], customerId, token);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['msg'] ?? 'Removed')));
+            _fetchData();
+          }
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -272,8 +309,9 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
                                    ],
                                  ),
                                )
-                             : ReorderableListView(
+                             : ReorderableListView.builder(
                                  padding: const EdgeInsets.all(16),
+                                 itemCount: _lineCustomers.length,
                                  onReorder: (oldIndex, newIndex) {
                                    setState(() {
                                      if (oldIndex < newIndex) {
@@ -284,9 +322,10 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
                                    });
                                    _updateOrder();
                                  },
-                                 children: _lineCustomers.map((cust) {
+                                 itemBuilder: (context, index) {
+                                   final cust = _lineCustomers[index];
                                    return Container(
-                                     key: ValueKey(cust['id']),
+                                     key: ValueKey(cust['id'] ?? index),
                                      margin: const EdgeInsets.only(bottom: 12),
                                      decoration: BoxDecoration(
                                        color: Colors.white,
@@ -295,18 +334,29 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
                                      ),
                                      child: ListTile(
                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                       leading: CircleAvatar(
-                                         backgroundColor: const Color(0xFFAEEA44), // Lime Green
-                                         foregroundColor: Colors.black,
-                                         radius: 20,
-                                         child: Text(
-                                           (_lineCustomers.indexOf(cust) + 1).toString(),
-                                           style: const TextStyle(fontWeight: FontWeight.bold),
-                                         ),
+                                       leading: Wrap(
+                                         spacing: 8,
+                                         crossAxisAlignment: WrapCrossAlignment.center,
+                                         children: [
+                                           CircleAvatar(
+                                             backgroundColor: const Color(0xFFAEEA44), // Lime Green
+                                             foregroundColor: Colors.black,
+                                             radius: 20,
+                                             child: Text(
+                                               (index + 1).toString(),
+                                               style: const TextStyle(fontWeight: FontWeight.bold),
+                                             ),
+                                           ),
+                                           IconButton(
+                                             icon: const Icon(Icons.person_remove_rounded, color: Colors.redAccent, size: 20),
+                                             onPressed: () => _removeCustomer(cust['id'] ?? 0),
+                                             tooltip: "Remove from Line",
+                                           ),
+                                         ],
                                        ),
-                                       title: Text(cust['name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                                       subtitle: Text('${cust['mobile']} • ${cust['area']}', style: GoogleFonts.outfit(color: Colors.black54)),
-                                       trailing: const Icon(Icons.drag_handle, color: Colors.black54),
+                                       title: Text(cust['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                                       subtitle: Text('${cust['mobile'] ?? 'No Mobile'} • ${cust['area'] ?? 'No Area'}', style: GoogleFonts.outfit(color: Colors.black54)),
+                                       trailing: const Icon(Icons.drag_handle, color: Colors.grey),
                                        onTap: () {
                                           Navigator.push(
                                             context,
@@ -317,7 +367,7 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
                                        },
                                      ),
                                    );
-                                 }).toList(),
+                                 },
                                ),
                          Padding(
                            padding: const EdgeInsets.all(16.0),

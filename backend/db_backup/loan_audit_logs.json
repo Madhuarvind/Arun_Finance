@@ -1,0 +1,122 @@
+[
+    {
+        "id": 1,
+        "loan_id": 4,
+        "action": "LOAN_CREATED",
+        "performed_by": 1,
+        "old_status": null,
+        "new_status": "created",
+        "remarks": "Loan draft created",
+        "timestamp": "2026-01-06T12:18:48"
+    },
+    {
+        "id": 2,
+        "loan_id": 4,
+        "action": "LOAN_APPROVED",
+        "performed_by": 1,
+        "old_status": "created",
+        "new_status": "approved",
+        "remarks": null,
+        "timestamp": "2026-01-06T12:19:57"
+    },
+    {
+        "id": 3,
+        "loan_id": 5,
+        "action": "LOAN_CREATED",
+        "performed_by": 1,
+        "old_status": null,
+        "new_status": "created",
+        "remarks": "Loan draft created",
+        "timestamp": "2026-01-06T12:24:45"
+    },
+    {
+        "id": 4,
+        "loan_id": 5,
+        "action": "LOAN_APPROVED",
+        "performed_by": 1,
+        "old_status": "created",
+        "new_status": "approved",
+        "remarks": null,
+        "timestamp": "2026-01-06T12:25:04"
+    },
+    {
+        "id": 5,
+        "loan_id": 6,
+        "action": "LOAN_CREATED",
+        "performed_by": 1,
+        "old_status": null,
+        "new_status": "created",
+        "remarks": "Loan draft created",
+        "timestamp": "2026-01-07T00:41:40"
+    },
+    {
+        "id": 6,
+        "loan_id": 6,
+        "action": "LOAN_APPROVED",
+        "performed_by": 1,
+        "old_status": "created",
+        "new_status": "approved",
+        "remarks": null,
+        "timestamp": "2026-01-07T00:42:28"
+    },
+    {
+        "id": 7,
+        "loan_id": 1,
+        "action": "COLLECTION_RECEIVED",
+        "performed_by": 1,
+        "old_status": null,
+        "new_status": null,
+        "remarks": "Collected 1500.0 via cash. ",
+        "timestamp": "2026-01-08T17:01:09"
+    },
+    {
+        "id": 8,
+        "loan_id": 1,
+        "action": "COLLECTION_RECEIVED",
+        "performed_by": 5,
+        "old_status": null,
+        "new_status": null,
+        "remarks": "Collected 300.0 via cash. ",
+        "timestamp": "2026-01-08T17:08:23"
+    },
+    {
+        "id": 9,
+        "loan_id": 1,
+        "action": "COLLECTION_RECEIVED",
+        "performed_by": 5,
+        "old_status": null,
+        "new_status": null,
+        "remarks": "Collected 100.0 via cash. ",
+        "timestamp": "2026-01-08T17:17:08"
+    },
+    {
+        "id": 10,
+        "loan_id": 1,
+        "action": "COLLECTION_RECEIVED",
+        "performed_by": 5,
+        "old_status": null,
+        "new_status": null,
+        "remarks": "Collected 100.0 via cash. ",
+        "timestamp": "2026-01-09T03:50:04"
+    },
+    {
+        "id": 11,
+        "loan_id": 1,
+        "action": "COLLECTION_SUBMITTED",
+        "performed_by": 3,
+        "old_status": null,
+        "new_status": null,
+        "remarks": "Collection of 300.0 registered as pending. Financials pending approval.",
+        "timestamp": "2026-01-13T10:50:24"
+    },
+    {
+        "id": 12,
+        "loan_id": 1,
+        "action": "COLLECTION_SUBMITTED",
+        "performed_by": 3,
+        "old_status": null,
+        "new_status": null,
+        "remarks": "Collection of 100.0 registered as pending. Financials pending approval.",
+        "timestamp": "2026-01-13T11:16:06"
+    }
+]

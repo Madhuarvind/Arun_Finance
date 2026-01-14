@@ -18,7 +18,7 @@ class UserDetailScreen extends StatefulWidget {
 
 class _UserDetailScreenState extends State<UserDetailScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;

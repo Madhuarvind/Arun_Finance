@@ -16,7 +16,7 @@ class ManagerReviewScreen extends StatefulWidget {
 class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   List<dynamic> _pending = [];
   List<dynamic> _history = [];

@@ -24,7 +24,7 @@ class UserManagementScreen extends StatefulWidget {
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _users = [];
   List<dynamic> _filteredUsers = [];
   bool _isLoading = true;

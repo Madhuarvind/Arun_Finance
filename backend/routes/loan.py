@@ -16,9 +16,10 @@ loan_bp = Blueprint("loan", __name__)
 def create_loan():
     identity = get_jwt_identity()
     user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
+        (User.username == identity)
+        | (User.id == str(identity))
+        | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -33,17 +34,17 @@ def create_loan():
     interest_type = data.get("interest_type", "flat")
     processing_fee = data.get("processing_fee", 0.0)
 
-    # Anti-Fraud: One Active Loan Rule
-    existing_loan = Loan.query.filter_by(
-        customer_id=customer_id, status="active"
-    ).first()
-    if existing_loan and not data.get("override_active_loan"):
-        return (
-            jsonify(
-                {"msg": "Customer already has an active loan", "code": "DUPLICATE_LOAN"}
-            ),
-            400,
-        )
+    # Anti-Fraud: One Active Loan Rule (Removed as per user request for multi-loan support)
+    # existing_loan = Loan.query.filter_by(
+    #     customer_id=customer_id, status="active"
+    # ).first()
+    # if existing_loan and not data.get("override_active_loan"):
+    #     return (
+    #         jsonify(
+    #             {"msg": "Customer already has an active loan", "code": "DUPLICATE_LOAN"}
+    #         ),
+    #         400,
+    #     )
 
     if not customer_id or not amount:
         return jsonify({"msg": "Customer ID and Amount are required"}), 400
@@ -108,7 +109,10 @@ def create_loan():
 def approve_loan(id):
     identity = get_jwt_identity()
     user = User.query.filter(
-        (User.username == identity) | (User.id == identity)
+        (User.username == identity)
+        | (User.id == identity)
+        | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if user.role.value != "admin":
@@ -229,7 +233,10 @@ def foreclose_loan(id):
     """Foreclose/Settle a loan early"""
     identity = get_jwt_identity()
     user = User.query.filter(
-        (User.username == identity) | (User.id == identity)
+        (User.username == identity)
+        | (User.id == identity)
+        | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     loan = Loan.query.get_or_404(id)
@@ -287,7 +294,10 @@ def foreclose_loan(id):
 def get_all_loans():
     identity = get_jwt_identity()
     user = User.query.filter(
-        (User.username == identity) | (User.id == identity)
+        (User.username == identity)
+        | (User.id == identity)
+        | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     status_filter = request.args.get("status")

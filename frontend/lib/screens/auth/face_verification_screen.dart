@@ -83,6 +83,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       if (result['msg'] == 'face_verified') {
         // Success -> Save tokens and navigate
         await _apiService.saveTokens(result['access_token'], result['refresh_token'] ?? '');
+        await _apiService.saveUserData(widget.userName, result['role'] ?? 'field_agent');
         
         // Save locally too
         await _localDbService.saveUserLocally(

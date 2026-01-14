@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:geolocator/geolocator.dart';
+import '../services/api_service.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({super.key});
@@ -9,7 +12,78 @@ class SecuritySettingsScreen extends StatefulWidget {
 }
 
 class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
-  bool _biometricsEnabled = true;
+  final _storage = const FlutterSecureStorage();
+  final ApiService _apiService = ApiService();
+  bool _biometricsEnabled = false;
+  bool _trackingEnabled = false;
+  // ignore: unused_field
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final bio = await _storage.read(key: 'biometrics_enabled');
+    final duty = await _storage.read(key: 'duty_status');
+    if (mounted) {
+      setState(() {
+        _biometricsEnabled = bio == 'true';
+        _trackingEnabled = duty == 'on_duty';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleBiometrics(bool val) async {
+    await _storage.write(key: 'biometrics_enabled', value: val.toString());
+    setState(() => _biometricsEnabled = val);
+  }
+
+  Future<void> _toggleTracking(bool val) async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) return;
+
+    setState(() => _isLoading = true);
+    
+    String status = val ? 'on_duty' : 'off_duty';
+    double? lat, lng;
+
+    if (val) {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+           final pos = await Geolocator.getCurrentPosition();
+           lat = pos.latitude;
+           lng = pos.longitude;
+        }
+      }
+    }
+
+    final res = await _apiService.updateWorkerTracking(
+      token: token,
+      dutyStatus: status,
+      latitude: lat,
+      longitude: lng,
+      activity: val ? 'starting_duty' : 'ending_duty'
+    );
+
+    if (res['msg'] == 'tracking_updated') {
+      await _storage.write(key: 'duty_status', value: status);
+      setState(() {
+        _trackingEnabled = val;
+        _isLoading = false;
+      });
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to update status")));
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +134,55 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
               "Face or Fingerprint unlock",
               Icons.fingerprint,
               _biometricsEnabled,
-              (val) => setState(() => _biometricsEnabled = val),
+              (val) => _toggleBiometrics(val),
               const Color(0xFFEFF6FF),
               const Color(0xFF3B82F6),
+            ),
+            
+            const SizedBox(height: 16),
+
+            _buildActionCard(
+              "Enroll/Update Face",
+              "Register your biometric profile",
+              Icons.face_retouching_natural_rounded,
+              const Color(0xFFFEF3C7),
+              const Color(0xFFD97706),
+              () => Navigator.pushNamed(context, '/enroll_face').then((val) {
+                 if (val == true) _loadSettings();
+              })
+            ),
+            
+            const SizedBox(height: 32),
+            
+            const SizedBox(height: 32),
+
+            Text(
+              "Field Operations",
+              style: GoogleFonts.outfit(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+               "Control live tracking and status",
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            _buildToggleCard(
+              "Duty Status",
+              "Live location and activity sync",
+              Icons.location_on_rounded,
+              _trackingEnabled,
+              (val) => _toggleTracking(val),
+              const Color(0xFFF1FCE4),
+              const Color(0xFF10B981),
             ),
             
             const SizedBox(height: 32),

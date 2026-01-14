@@ -27,6 +27,7 @@ def create_line():
         (User.username == identity)
         | (User.id == identity)
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -64,8 +65,9 @@ def get_all_lines():
     identity = get_jwt_identity()
     user = User.query.filter(
         (User.username == identity)
-        | (User.id == identity)
+        | (User.id == str(identity))
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -86,6 +88,9 @@ def get_all_lines():
                     "area": sub_loan.area,
                     "agent_id": sub_loan.agent_id,
                     "is_locked": sub_loan.is_locked,
+                    "start_time": sub_loan.start_time,
+                    "end_time": sub_loan.end_time,
+                    "working_days": sub_loan.working_days,
                     "customer_count": len(sub_loan.customers),
                 }
                 for sub_loan in lines
@@ -95,17 +100,56 @@ def get_all_lines():
     )
 
 
+@line_bp.route("/<int:line_id>", methods=["PATCH"])
+@jwt_required()
+def update_line(line_id):
+    identity = get_jwt_identity()
+    user = User.query.filter(
+        (User.username == identity)
+        | (User.id == str(identity))
+        | (User.mobile_number == identity)
+        | (User.name == identity)
+    ).first()
+
+    if not user or user.role != UserRole.ADMIN:
+        return jsonify({"msg": "Access Denied"}), 403
+
+    line = Line.query.get(line_id)
+    if not line:
+        return jsonify({"msg": "Line not found"}), 404
+
+    data = request.get_json()
+    if "name" in data:
+        line.name = data["name"]
+    if "area" in data:
+        line.area = data["area"]
+    if "agent_id" in data:
+        line.agent_id = data["agent_id"]
+    if "working_days" in data:
+        line.working_days = data["working_days"]
+    if "start_time" in data:
+        line.start_time = data["start_time"]
+    if "end_time" in data:
+        line.end_time = data["end_time"]
+    if "is_locked" in data:
+        line.is_locked = data["is_locked"]
+
+    db.session.commit()
+    return jsonify({"msg": "line_updated_successfully"}), 200
+
+
 @line_bp.route("/<int:line_id>/assign-agent", methods=["POST"])
 @jwt_required()
 def assign_agent(line_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
+    user = User.query.filter(
         (User.username == identity)
-        | (User.id == identity)
+        | (User.id == str(identity))
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
-    if not admin or admin.role != UserRole.ADMIN:
+    if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
 
     data = request.get_json()
@@ -125,14 +169,23 @@ def assign_agent(line_id):
 @jwt_required()
 def add_customer_to_line(line_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
+    user = User.query.filter(
         (User.username == identity)
-        | (User.id == identity)
+        | (User.id == str(identity))
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
-    if not admin or admin.role != UserRole.ADMIN:
-        return jsonify({"msg": "Access Denied"}), 403
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    line = Line.query.get(line_id)
+    if not line:
+        return jsonify({"msg": "Line not found"}), 404
+
+    # Allow Admin OR the assigned agent of the line to add customers
+    if user.role != UserRole.ADMIN and line.agent_id != user.id:
+        return jsonify({"msg": "Permission denied"}), 403
 
     data = request.get_json()
     customer_id = data.get("customer_id")
@@ -144,13 +197,10 @@ def add_customer_to_line(line_id):
     # Check if customer already in another active line? (User rule 3.3)
     # For now, just allow mapping
 
-    # Calculate next sequence order
-    max_seq = (
-        db.session.query(db.func.max(LineCustomer.sequence_order))
-        .filter_by(line_id=line_id)
-        .scalar()
-        or 0
-    )
+    # Prevent duplicates
+    existing = LineCustomer.query.filter_by(line_id=line_id, customer_id=customer_id).first()
+    if existing:
+        return jsonify({"msg": "customer_already_in_line"}), 400
 
     new_mapping = LineCustomer(
         line_id=line_id, customer_id=customer_id, sequence_order=max_seq + 1
@@ -175,34 +225,67 @@ def get_line_customers(line_id):
         .all()
     )
 
-    return (
-        jsonify(
-            [
-                {
-                    "id": m.customer.id,
-                    "name": m.customer.name,
-                    "mobile": m.customer.mobile_number,
-                    "area": m.customer.area,
-                    "sequence": m.sequence_order,
-                }
-                for m in customers_mapping
-            ]
-        ),
-        200,
-    )
+    today = datetime.utcnow().date()
+    # Simplified check: Has ANY loan of this customer been collected today on THIS line?
+    # Usually a customer has one loan per line.
+    
+    results = []
+    for m in customers_mapping:
+        # Get active loans for this customer
+        active_loans = Loan.query.filter_by(customer_id=m.customer.id, status='active').all()
+        loan_summaries = []
+        fully_collected = True if active_loans else False
+        
+        for l in active_loans:
+            is_collected = Collection.query.filter(
+                Collection.loan_id == l.id,
+                db.func.date(Collection.created_at) == today,
+                Collection.status != 'rejected'
+            ).first() is not None
+            
+            loan_summaries.append({
+                "id": l.id,
+                "loan_id": l.loan_id,
+                "is_collected": is_collected,
+                "pending": l.pending_amount
+            })
+            if not is_collected:
+                fully_collected = False
+
+        results.append({
+            "id": m.customer.id,
+            "name": m.customer.name,
+            "mobile": m.customer.mobile_number,
+            "area": m.customer.area,
+            "sequence": m.sequence_order,
+            "is_collected_today": fully_collected,
+            "active_loans": loan_summaries,
+            "loan_count": len(active_loans)
+        })
+
+    return jsonify(results), 200
 
 
 @line_bp.route("/<int:line_id>/reorder", methods=["POST"])
 @jwt_required()
 def reorder_line_customers(line_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
+    user = User.query.filter(
         (User.username == identity)
-        | (User.id == identity)
+        | (User.id == str(identity))
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
-    if not admin or admin.role != UserRole.ADMIN:
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    line = Line.query.get(line_id)
+    if not line:
+        return jsonify({"msg": "Line not found"}), 404
+    
+    # Allow Admin OR the assigned agent to reorder
+    if user.role != UserRole.ADMIN and line.agent_id != user.id:
         return jsonify({"msg": "Access Denied"}), 403
 
     data = request.get_json()
@@ -226,13 +309,14 @@ def reorder_line_customers(line_id):
 @jwt_required()
 def toggle_line_lock(line_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
+    user = User.query.filter(
         (User.username == identity)
-        | (User.id == identity)
+        | (User.id == str(identity))
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
-    if not admin or admin.role != UserRole.ADMIN:
+    if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
 
     line = Line.query.get(line_id)
@@ -338,6 +422,7 @@ def bulk_reassign_agent():
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -377,3 +462,27 @@ def bulk_reassign_agent():
     except Exception as e:
         db.session.rollback()
         return jsonify({"msg": str(e)}), 500
+@line_bp.route("/<int:line_id>/customer/<int:customer_id>", methods=["DELETE"])
+@jwt_required()
+def remove_customer_from_line(line_id, customer_id):
+    identity = get_jwt_identity()
+    user = User.query.filter(
+        (User.username == identity)
+        | (User.id == str(identity))
+        | (User.mobile_number == identity)
+        | (User.name == identity)
+    ).first()
+
+    if not user or user.role != UserRole.ADMIN:
+        return jsonify({"msg": "Access Denied"}), 403
+
+    mapping = LineCustomer.query.filter_by(
+        line_id=line_id, customer_id=customer_id
+    ).first()
+    if not mapping:
+        return jsonify({"msg": "Mapping not found"}), 404
+
+    db.session.delete(mapping)
+    db.session.commit()
+
+    return jsonify({"msg": "customer_removed_from_line"}), 200

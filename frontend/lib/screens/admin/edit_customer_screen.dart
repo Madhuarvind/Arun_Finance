@@ -18,7 +18,7 @@ class EditCustomerScreen extends StatefulWidget {
 class _EditCustomerScreenState extends State<EditCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
   final _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   late TextEditingController _nameCtrl;
   late TextEditingController _mobileCtrl;

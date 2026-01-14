@@ -13,23 +13,26 @@ class LoanApprovalScreen extends StatefulWidget {
 
 class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
   final _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _pendingLoans = [];
+  List<dynamic> _historyLoans = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchPendingLoans();
+    _fetchData();
   }
 
-  Future<void> _fetchPendingLoans() async {
+  Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     final token = await _storage.read(key: 'jwt_token');
     if (token != null) {
-      final loans = await _apiService.getLoans(status: 'created', token: token);
+      final pending = await _apiService.getLoans(status: 'created', token: token);
+      final all = await _apiService.getLoans(token: token);
       setState(() {
-        _pendingLoans = loans;
+        _pendingLoans = pending;
+        _historyLoans = all.where((l) => l['status'] != 'created').toList();
       });
     }
     setState(() => _isLoading = false);
@@ -37,43 +40,64 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(
-        title: Text("Pending Approvals", style: GoogleFonts.outfit(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        appBar: AppBar(
+          title: Text("Loan Approvals", style: GoogleFonts.outfit(color: Colors.black)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          bottom: const TabBar(
+            labelColor: AppTheme.primaryColor,
+            unselectedLabelColor: Colors.grey,
+            tabs: [
+              Tab(text: "PENDING"),
+              Tab(text: "HISTORY"),
+            ],
+          ),
+          iconTheme: const IconThemeData(color: Colors.black),
+        ),
+        body: TabBarView(
+          children: [
+            _buildList(_pendingLoans, "No pending loans"),
+            _buildList(_historyLoans, "No loan history"),
+          ],
+        ),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : _pendingLoans.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(15),
-              itemCount: _pendingLoans.length,
-              itemBuilder: (context, index) {
-                final loan = _pendingLoans[index];
-                return _buildLoanCard(loan);
-              },
-            ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildList(List<dynamic> loans, String emptyMsg) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (loans.isEmpty) return _buildEmptyState(emptyMsg);
+    return ListView.builder(
+      padding: const EdgeInsets.all(15),
+      itemCount: loans.length,
+      itemBuilder: (context, index) {
+        final loan = loans[index];
+        return _buildLoanCard(loan);
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String msg) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.assignment_turned_in_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 10),
-          Text("No pending loans for approval", style: GoogleFonts.outfit(color: Colors.grey)),
+          Text(msg, style: GoogleFonts.outfit(color: Colors.grey)),
         ],
       ),
     );
   }
 
   Widget _buildLoanCard(dynamic loan) {
+    final status = (loan['status'] ?? 'N/A').toString().toUpperCase();
+    final statusColor = status == 'CREATED' ? Colors.orange : status == 'APPROVED' ? Colors.green : Colors.blue;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       margin: const EdgeInsets.only(bottom: 15),
@@ -88,35 +112,37 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
                 Text(loan['loan_id'] ?? "Draft", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(10)),
-                  child: Text("PENDING", style: GoogleFonts.outfit(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                  child: Text(status, style: GoogleFonts.outfit(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
             const Divider(),
             _infoRow(Icons.person, "Customer", loan['customer_name'] ?? "Unknown"),
-            _infoRow(Icons.currency_rupee, "Amount", "₹${loan['principal_amount']}"),
-            _infoRow(Icons.percent, "Interest", "${loan['interest_rate']}% (${loan['interest_type']})"),
-            _infoRow(Icons.calendar_month, "Tenure", "${loan['tenure']} ${loan['tenure_unit']}"),
-            const SizedBox(height: 15),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {}, // TODO: Reject
-                    child: const Text("Reject"),
+            _infoRow(Icons.currency_rupee, "Amount", "₹${loan['principal_amount'] ?? 0}"),
+            _infoRow(Icons.percent, "Interest", "${loan['interest_rate'] ?? 0}% (${loan['interest_type'] ?? 'flat'})"),
+            _infoRow(Icons.calendar_month, "Tenure", "${loan['tenure'] ?? 0} ${loan['tenure_unit'] ?? 'days'}"),
+            if (loan['status'] == 'created') ...[
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {}, // TODO: Reject
+                      child: const Text("Reject"),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
-                    onPressed: () => _approveAction(loan),
-                    child: const Text("Approve"),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+                      onPressed: () => _approveAction(loan),
+                      child: const Text("Approve"),
+                    ),
                   ),
-                ),
-              ],
-            )
+                ],
+              )
+            ]
           ],
         ),
       ),
@@ -154,7 +180,7 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
         if (mounted) {
           if (result.containsKey('msg')) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Loan Approved Successfully"), backgroundColor: Colors.green));
-            _fetchPendingLoans();
+            _fetchData();
           }
         }
       }

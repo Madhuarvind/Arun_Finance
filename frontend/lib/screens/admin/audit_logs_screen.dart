@@ -129,7 +129,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    log['user_name'] ?? 'Unknown User',
+                                    log['user_name']?.toString() ?? 'Unknown User',
                                     style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                 ),
@@ -144,9 +144,9 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                               children: [
                                 const SizedBox(height: 4),
                                 Text(
-                                  _getStatusLabel(log['status']).toUpperCase(),
+                                  _getStatusLabel(log['status']?.toString() ?? 'unknown').toUpperCase(),
                                   style: TextStyle(
-                                    color: _getStatusColor(log['status']), 
+                                    color: _getStatusColor(log['status']?.toString() ?? 'unknown'), 
                                     fontWeight: FontWeight.w900,
                                     fontSize: 12,
                                     letterSpacing: 1.1,
@@ -158,7 +158,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                                     const Icon(Icons.phone_iphone_rounded, size: 14, color: Colors.white24),
                                     const SizedBox(width: 4),
                                     Text(
-                                      log['mobile'],
+                                      log['mobile']?.toString() ?? 'N/A',
                                       style: const TextStyle(color: Colors.white38, fontSize: 13),
                                     ),
                                     const SizedBox(width: 12),
@@ -166,7 +166,7 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        log['device'],
+                                        log['device']?.toString() ?? 'Unknown Device',
                                         style: const TextStyle(color: Colors.white38, fontSize: 13),
                                         overflow: TextOverflow.ellipsis,
                                       ),

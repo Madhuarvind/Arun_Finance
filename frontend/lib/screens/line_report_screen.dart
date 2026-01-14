@@ -20,7 +20,7 @@ class LineReportScreen extends StatefulWidget {
 
 class _LineReportScreenState extends State<LineReportScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   Map<String, dynamic>? _reportData;
   bool _isLoading = true;
 

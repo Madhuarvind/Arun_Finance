@@ -29,6 +29,7 @@ def submit_collection():
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -49,29 +50,35 @@ def submit_collection():
     if not loan:
         return jsonify({"msg": "Loan not found"}), 404
 
-    # 1. Duplicate Check (Idempotency)
-    # Check for same loan, amount, agent within last 2 minutes if no unique ID provided
-    # Or strict check if client sends a UUID (future improvement)
-    cutoff = datetime.utcnow() - timedelta(minutes=2)
-    duplicate = Collection.query.filter(
+    # --- NEW: ENFORCE ENHANCED SECURITY ---
+    today = datetime.utcnow().date()
+    
+    # 1. Check if already collected today FOR THIS LOAN
+    existing_today = Collection.query.filter(
         Collection.loan_id == loan_id,
-        Collection.amount == amount,
-        Collection.agent_id == user.id,
-        Collection.created_at >= cutoff,
+        db.func.date(Collection.created_at) == today
     ).first()
+    
+    if existing_today:
+        return jsonify({"msg": "already_collected_today"}), 400
 
-    if duplicate:
-        print(f"Duplicate collection detected: {duplicate.id}")
-        return (
-            jsonify(
-                {
-                    "msg": "Duplicate collection detected",
-                    "id": duplicate.id,
-                    "status": duplicate.status,
-                }
-            ),
-            200,
-        )
+    # 2. Check Time Window if line_id provided
+    if line_id:
+        line = Line.query.get(line_id)
+        if line and line.start_time and line.end_time:
+            # Current time in IST (User preference)
+            ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
+            current_time_str = ist_now.strftime("%H:%M")
+            
+            if not (line.start_time <= current_time_str <= line.end_time):
+                return jsonify({
+                    "msg": "collection_window_closed",
+                    "window": f"{line.start_time} - {line.end_time}",
+                    "current": current_time_str
+                }), 403
+
+    # 3. Duplicate Check (Idempotency - Short term)
+    # ...
 
     # --- PHASE 11: AI-POWERED FRAUD DETECTION & GEOFENCING ---
     fraud_flag = False
@@ -400,6 +407,7 @@ def update_collection_status(collection_id):
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not user or user.role == UserRole.FIELD_AGENT:
@@ -415,13 +423,13 @@ def update_collection_status(collection_id):
     if not collection:
         return jsonify({"msg": "Collection not found"}), 404
 
+    old_status = collection.status
     collection.status = status
 
-    if status == "approved" and collection.status != "approved":
+    if status == "approved" and old_status != "approved":
         loan = Loan.query.get(collection.loan_id)
         if loan:
             # Applying financial update only now
-            collection.status = "approved"
 
             remaining = collection.amount
             emis = (
@@ -480,6 +488,7 @@ def get_financial_stats():
         (User.username == identity)
         | (User.id == identity)
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user or user.role != UserRole.ADMIN:
@@ -541,6 +550,7 @@ def get_agent_stats():
         (User.username == identity)
         | (User.id == identity)
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -578,6 +588,7 @@ def get_collection_history():
         (User.username == identity)
         | (User.id == identity)
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:

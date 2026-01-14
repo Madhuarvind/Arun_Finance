@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../utils/theme.dart';
 import '../../services/api_service.dart';
-
+import '../../utils/localizations.dart';
 
 class RiskPredictionScreen extends StatefulWidget {
   const RiskPredictionScreen({super.key});
@@ -14,9 +15,10 @@ class RiskPredictionScreen extends StatefulWidget {
 
 class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   Map<String, dynamic>? _dashboardData;
+  Map<String, dynamic>? _aiInsights;
   bool _isLoading = true;
 
   @override
@@ -29,12 +31,24 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
     setState(() => _isLoading = true);
     final token = await _storage.read(key: 'jwt_token');
     if (token != null) {
-      final data = await _apiService.getRiskDashboard(token);
-      if (mounted) {
-        setState(() {
-          _dashboardData = data;
-          _isLoading = false;
-        });
+      try {
+        final results = await Future.wait([
+          _apiService.getRiskDashboard(token),
+          _apiService.getDashboardAIInsights(token),
+        ]);
+        
+        if (mounted) {
+          setState(() {
+            _dashboardData = results[0];
+            _aiInsights = results[1];
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint("Error fetching risk data: $e");
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -44,37 +58,32 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text('AI Risk Prediction', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text(
+          context.translate('risk_predictions'),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
           : RefreshIndicator(
               onRefresh: _fetchData,
               child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSummaryCards(),
-                    const SizedBox(height: 30),
-                    Text(
-                      "Critical Default Risks",
-                      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Customers predicted with high probability of default",
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_dashboardData?['high_risk_customers']?.isEmpty ?? true)
-                      _buildEmptyState()
-                    else
-                      ...(_dashboardData!['high_risk_customers'] as List).map((c) => _buildRiskTile(c)),
+                    _buildTopInsightCard(),
+                    const SizedBox(height: 24),
+                    _buildRiskDistributionSection(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('AI Strategic Summaries'),
+                    _buildAiSummariesList(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('Priority Collection (High Risk)'),
+                    _buildProblemLoansList(),
                   ],
                 ),
               ),
@@ -82,97 +91,228 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
     );
   }
 
-  Widget _buildSummaryCards() {
-    return Row(
+  Widget _buildTopInsightCard() {
+    final status = _aiInsights?['ai_summaries'] != null && _aiInsights!['ai_summaries'].isNotEmpty
+        ? "Action Required"
+        : "System Healthy";
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Icon(Icons.psychology_outlined, color: Colors.white, size: 32),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  status,
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "AI Neural Risk Analysis",
+            style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Real-time Probability Engine",
+            style: GoogleFonts.outfit(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRiskDistributionSection() {
+    final high = _dashboardData?['high_risk_count'] ?? 0;
+    final med = _dashboardData?['medium_risk_count'] ?? 0;
+    final low = _dashboardData?['low_risk_count'] ?? 0;
+    final total = _dashboardData?['total_active'] ?? 1;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatIndicator("High", high, Colors.redAccent),
+              _buildStatIndicator("Med", med, Colors.orangeAccent),
+              _buildStatIndicator("Low", low, Colors.greenAccent),
+            ],
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            height: 180,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 4,
+                centerSpaceRadius: 40,
+                sections: [
+                  PieChartSectionData(value: high.toDouble(), color: Colors.redAccent, title: '', radius: 50),
+                  PieChartSectionData(value: med.toDouble(), color: Colors.orangeAccent, title: '', radius: 50),
+                  PieChartSectionData(value: low.toDouble(), color: Colors.greenAccent, title: '', radius: 50),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Total Active Portfolio: $total Loans",
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatIndicator(String label, int count, Color color) {
+    return Column(
       children: [
-        _buildStatCard("High Risk", _dashboardData?['high_risk_count'] ?? 0, Colors.red),
-        const SizedBox(width: 12),
-        _buildStatCard("Medium", _dashboardData?['medium_risk_count'] ?? 0, Colors.orange),
-        const SizedBox(width: 12),
-        _buildStatCard("Safe", _dashboardData?['low_risk_count'] ?? 0, Colors.green),
+        Text(count.toString(), style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, int value, Color color) {
-    return Expanded(
-      child: Container(
+  Widget _buildAiSummariesList() {
+    final summaries = List<String>.from(_aiInsights?['ai_summaries'] ?? []);
+    if (summaries.isEmpty) {
+      return _buildEmptyState("No critical AI alerts detected.");
+    }
+
+    return Column(
+      children: summaries.map((s) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          color: Colors.indigo.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.indigo.withValues(alpha: 0.1)),
         ),
-        child: Column(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
-            const SizedBox(height: 8),
-            Text(
-              "$value",
-              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: color),
+            const Icon(Icons.auto_awesome, color: Colors.indigo, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                s,
+                style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w500),
+              ),
             ),
           ],
         ),
-      ),
+      )).toList(),
     );
   }
 
-  Widget _buildRiskTile(Map<String, dynamic> customer) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.red[50],
-            child: const Icon(Icons.warning_amber_rounded, color: Colors.red),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildProblemLoansList() {
+    final loans = List<dynamic>.from(_aiInsights?['problem_loans'] ?? []);
+    if (loans.isEmpty) {
+      return _buildEmptyState("No defaulted loans in priority queue.");
+    }
+
+    return Column(
+      children: loans.map((l) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+              child: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l['customer'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text("Loan ID: ${l['loan_id']}", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(customer['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                Text("Loan: ${customer['loan_id']}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text("₹ ${l['pending']}", style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                Text("${l['missed']} Missed", style: const TextStyle(color: Colors.grey, fontSize: 11)),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text("₹${customer['pending']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
-              Text("${customer['missed']} missed", style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            ],
-          ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: Colors.grey),
-        ],
+          ],
+        ),
+      )).toList(),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        title,
+        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textColor),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(String msg) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
       ),
       child: Column(
         children: [
-          Icon(Icons.check_circle_outline, size: 48, color: Colors.green[200]),
+          Icon(Icons.check_circle_outline_rounded, color: Colors.green.withValues(alpha: 0.2), size: 48),
           const SizedBox(height: 16),
-          const Text("No High-Risk Defaults", style: TextStyle(fontWeight: FontWeight.bold)),
-          const Text("AI engine hasn't detected any critical default risks.", style: TextStyle(fontSize: 12, color: Colors.grey), textAlign: TextAlign.center),
+          Text(msg, style: const TextStyle(color: Colors.grey, fontSize: 14)),
         ],
       ),
     );

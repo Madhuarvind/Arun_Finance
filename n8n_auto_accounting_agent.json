@@ -1,0 +1,120 @@
+{
+  "name": "Auto-Accounting Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "accounting-agent",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 23,
+              "minute": 15
+            }
+          ]
+        }
+      },
+      "name": "Cron Daily 9PM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        460,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://reunionistic-damian-unrelevantly.ngrok-free.dev/api/reports/auto-accounting",
+        "authentication": "none",
+        "options": {}
+      },
+      "name": "Fetch Accounting Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = items[0].json;\n\nconst total = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.total);\nconst morning = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.morning);\nconst evening = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.evening);\nconst loan = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.loan_principal);\nconst interest = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.loan_interest);\nconst cash = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.cash);\nconst upi = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(data.upi);\n\nconst message = `📊 *Daily Auto-Accounting Report* 📊\n\n💰 *Today Total = ${total}*\n\n🌞 Morning = ${morning}\n🌙 Evening = ${evening}\n\n💵 Cash = ${cash}\n📱 UPI = ${upi}\n\n🏦 Loan Principal = ${loan}\n📈 Interest = ${interest}`;\n\nreturn [\n  {\n    json: {\n      message: message\n    }\n  }\n];"
+      },
+      "name": "Format Report",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://reunionistic-damian-unrelevantly.ngrok-free.dev/api/reports/auto-accounting/save",
+        "authentication": "none",
+        "options": {}
+      },
+      "name": "Save Accounting Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        900,
+        450
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Accounting Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Daily 9PM": {
+      "main": [
+        [
+          {
+            "node": "Fetch Accounting Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Accounting Data": {
+      "main": [
+        [
+          {
+            "node": "Format Report",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Accounting Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

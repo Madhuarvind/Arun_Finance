@@ -17,10 +17,12 @@ def create_app():
         },
     )
 
-    # Configuration - Using MySQL
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "mysql+pymysql://root:MYSQL@localhost:3306/vasool_drive"
-    )
+    # Configuration - Using MySQL/PostgreSQL
+    db_url = os.getenv("DATABASE_URL")
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "mysql+pymysql://root:MYSQL@localhost:3306/vasool_drive"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["JWT_SECRET_KEY"] = os.getenv(
         "JWT_SECRET_KEY", "vasool-drive-secret-keys"
@@ -41,6 +43,8 @@ def create_app():
     from routes.security import security_bp
     from routes.settlement import settlement_bp
     from routes.admin_tools import admin_tools_bp
+    from routes.ops_analytics import ops_bp
+    from routes.worker_tracking import tracking_bp
 
     # Pre-load face verification model
     try:
@@ -62,6 +66,8 @@ def create_app():
     app.register_blueprint(security_bp, url_prefix="/api/security")
     app.register_blueprint(settlement_bp, url_prefix="/api/settlement")
     app.register_blueprint(admin_tools_bp, url_prefix="/api/admin")
+    app.register_blueprint(ops_bp, url_prefix="/api/ops")
+    app.register_blueprint(tracking_bp, url_prefix="/api/worker")
 
     return app
 
@@ -72,4 +78,4 @@ if __name__ == "__main__":
         db.create_all()
     host = os.getenv("HOST", "0.0.0.0")  # nosec B104
     port = int(os.getenv("PORT", 5000))
-    app.run(debug=False, host=host, port=port)  # nosec B104
+    app.run(debug=True, host=host, port=port)  # nosec B104

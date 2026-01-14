@@ -16,7 +16,7 @@ class FinancialAnalyticsScreen extends StatefulWidget {
 
 class _FinancialAnalyticsScreenState extends State<FinancialAnalyticsScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   Map<String, dynamic>? _stats;
   bool _isLoading = true;
 

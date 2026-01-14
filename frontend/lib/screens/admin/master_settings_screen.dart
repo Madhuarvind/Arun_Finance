@@ -13,7 +13,7 @@ class MasterSettingsScreen extends StatefulWidget {
 
 class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   bool _isLoading = true;
   final _formKey = GlobalKey<FormState>();
 

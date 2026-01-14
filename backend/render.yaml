@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: vasool-drive-backend
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vasool-drive-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.9.18
+
+databases:
+  - name: vasool-drive-db
+    databaseName: vasool_drive
+    user: vasool_user
+    region: singapore
+    plan: free

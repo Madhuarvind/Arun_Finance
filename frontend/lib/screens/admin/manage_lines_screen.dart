@@ -13,7 +13,7 @@ class ManageLinesScreen extends StatefulWidget {
 
 class _ManageLinesScreenState extends State<ManageLinesScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _lines = [];
   List<dynamic> _agents = [];
   bool _isLoading = true;
@@ -184,6 +184,64 @@ class _ManageLinesScreenState extends State<ManageLinesScreen> {
     }
   }
 
+  Future<void> _editLineSettings(dynamic line) async {
+    final nameController = TextEditingController(text: line['name']);
+    final areaController = TextEditingController(text: line['area']);
+    final startController = TextEditingController(text: line['start_time'] ?? '09:00');
+    final endController = TextEditingController(text: line['end_time'] ?? '18:00');
+
+    return showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Edit Line Settings"),
+        scrollable: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Line Name")),
+            const SizedBox(height: 12),
+            TextField(controller: areaController, decoration: const InputDecoration(labelText: "Area")),
+            const SizedBox(height: 20),
+            const Text("Collection Window (24h format)", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: TextField(controller: startController, decoration: const InputDecoration(labelText: "Start (HH:MM)"))),
+                const SizedBox(width: 16),
+                Expanded(child: TextField(controller: endController, decoration: const InputDecoration(labelText: "End (HH:MM)"))),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final token = await _storage.read(key: 'jwt_token');
+                if (token != null) {
+                  await _apiService.updateLine(line['id'], {
+                    'name': nameController.text,
+                    'area': areaController.text,
+                    'start_time': startController.text,
+                    'end_time': endController.text,
+                  }, token);
+                  if (!ctx.mounted) return;
+                  Navigator.pop(ctx);
+                  _fetchData();
+                }
+              } catch (e) {
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+              }
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _showBulkReassignDialog() async {
     int? fromAgentId;
     int? toAgentId;
@@ -341,7 +399,7 @@ class _ManageLinesScreenState extends State<ManageLinesScreen> {
                                     minimumSize: const Size(140, 36),
                                   ),
                                 ),
-                                ElevatedButton.icon(
+                                 ElevatedButton.icon(
                                   onPressed: () {
                                     Navigator.pushNamed(context, '/admin/line_customers', arguments: line);
                                   },
@@ -353,6 +411,20 @@ class _ManageLinesScreenState extends State<ManageLinesScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.orange.shade50,
                                     foregroundColor: Colors.orange,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    minimumSize: const Size(140, 36),
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: () => _editLineSettings(line),
+                                  icon: const Icon(Icons.settings, size: 16),
+                                  label: const Text(
+                                    "Edit Settings",
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey.shade100,
+                                    foregroundColor: Colors.grey.shade700,
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                     minimumSize: const Size(140, 36),
                                   ),

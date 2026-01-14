@@ -13,7 +13,7 @@ class AddUserWizardScreen extends StatefulWidget {
 
 class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   final PageController _pageController = PageController();
   
   int _currentStep = 0;

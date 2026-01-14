@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/theme.dart';
 import '../../utils/localizations.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../services/api_service.dart';
 import 'customer/customer_list_screen.dart';
 import 'common/qr_scan_screen.dart';
+import 'package:geolocator/geolocator.dart';
 
 class WorkerDashboard extends StatefulWidget {
   const WorkerDashboard({super.key});
@@ -19,18 +21,53 @@ class WorkerDashboard extends StatefulWidget {
 
 class _WorkerDashboardState extends State<WorkerDashboard> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String? _userName;
   String? _role;
   Map<String, dynamic> _stats = {"collected": 0.0, "goal": 50000.0};
   List<dynamic> _history = [];
   bool _isLoading = true;
+  Timer? _trackingTimer;
 
   @override
   void initState() {
     super.initState();
     _loadAllData();
+    _startTrackingTimer();
+  }
+
+  @override
+  void dispose() {
+    _trackingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTrackingTimer() {
+    _trackingTimer?.cancel();
+    _trackingTimer = Timer.periodic(const Duration(minutes: 5), (timer) async {
+      final dutyStatus = await _storage.read(key: 'duty_status');
+      if (dutyStatus == 'on_duty') {
+        _syncLocation();
+      }
+    });
+  }
+
+  Future<void> _syncLocation() async {
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) return;
+
+    try {
+      final pos = await Geolocator.getCurrentPosition(locationSettings: LocationSettings(accuracy: LocationAccuracy.medium, timeLimit: const Duration(seconds: 10)));
+      await _apiService.updateWorkerTracking(
+        token: token,
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+        activity: 'periodic_sync',
+      );
+    } catch (e) {
+      debugPrint("Location sync failed: $e");
+    }
   }
 
   Future<void> _loadAllData() async {

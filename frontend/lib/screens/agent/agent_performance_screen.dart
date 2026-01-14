@@ -13,7 +13,7 @@ class AgentPerformanceScreen extends StatefulWidget {
 
 class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   Map<String, dynamic> _stats = {"collected": 0.0, "goal": 50000.0};
   bool _isLoading = true;
 

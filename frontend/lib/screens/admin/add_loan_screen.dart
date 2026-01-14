@@ -27,7 +27,7 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
   String _interestType = 'flat';
   String _tenureUnit = 'days';
   
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   final _apiService = ApiService();
   final _localDb = LocalDbService();
   bool _isLoading = false;

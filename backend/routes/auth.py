@@ -443,9 +443,34 @@ def register_face():
     try:
         user_id = request.form.get("user_id")
         device_id = request.form.get("device_id")
+        identity = get_jwt_identity()
 
-        if "file" not in request.files or not user_id:
-            return jsonify({"msg": "Missing face file or User ID"}), 400
+        # Resolve the requester
+        requester = User.query.filter(
+            (User.id == identity) | 
+            (User.name == identity) | 
+            (User.mobile_number == identity) | 
+            (User.username == identity)
+        ).first()
+
+        if not requester:
+            return jsonify({"msg": "unauthorized"}), 403
+
+        # Determine target user
+        if not user_id or user_id == "0":
+            target_user = requester
+        else:
+            # If specified a specific ID, verify permission
+            target_user = User.query.get(int(user_id))
+            if not target_user:
+                return jsonify({"msg": "target_user_not_found"}), 404
+            
+            # Non-admins can only register their own face
+            if requester.role != UserRole.ADMIN and requester.id != target_user.id:
+                return jsonify({"msg": "permission_denied"}), 403
+
+        if "file" not in request.files:
+            return jsonify({"msg": "Missing face file"}), 400
 
         file = request.files["file"]
         image_bytes = file.read()
@@ -460,11 +485,12 @@ def register_face():
         from models import FaceEmbedding
 
         # Remove old embedding if exists
-        user_id_int = int(user_id)
-        FaceEmbedding.query.filter_by(user_id=user_id_int).delete()
+        FaceEmbedding.query.filter_by(user_id=target_user.id).delete()
 
         new_face = FaceEmbedding(
-            user_id=user_id_int, embedding_data=embedding, device_id=device_id
+            user_id=target_user.id, 
+            embedding_data=embedding, 
+            device_id=device_id
         )
         db.session.add(new_face)
         db.session.commit()
@@ -479,7 +505,10 @@ def register_face():
 def list_users():
     identity = get_jwt_identity()
     admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
+        (User.mobile_number == identity)
+        | (User.username == identity)
+        | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -515,7 +544,10 @@ def list_users():
 def reset_device():
     identity = get_jwt_identity()
     admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
+        (User.mobile_number == identity)
+        | (User.username == identity)
+        | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -539,7 +571,10 @@ def reset_device():
 def get_audit_logs():
     identity = get_jwt_identity()
     admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
+        (User.mobile_number == identity)
+        | (User.username == identity)
+        | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -570,7 +605,10 @@ def get_audit_logs():
 def clear_biometrics(user_id):
     identity = get_jwt_identity()
     admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
+        (User.mobile_number == identity)
+        | (User.username == identity)
+        | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -589,7 +627,10 @@ def clear_biometrics(user_id):
 def reset_user_pin(user_id):
     identity = get_jwt_identity()
     admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
+        (User.mobile_number == identity)
+        | (User.username == identity)
+        | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:
@@ -617,7 +658,10 @@ def reset_user_pin(user_id):
 def get_user_detail(user_id):
     identity = get_jwt_identity()
     admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
+        (User.mobile_number == identity)
+        | (User.username == identity)
+        | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not admin or admin.role != UserRole.ADMIN:

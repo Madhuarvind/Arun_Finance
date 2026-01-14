@@ -6,6 +6,7 @@ import '../../utils/localizations.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class WorkerLoginScreen extends StatefulWidget {
   const WorkerLoginScreen({super.key});
@@ -19,7 +20,38 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
   final TextEditingController _pinController = TextEditingController();
   final ApiService _apiService = ApiService();
   final LocalDbService _localDbService = LocalDbService();
+  final _storage = FlutterSecureStorage();
   bool _isLoading = false;
+  bool _biometricsEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    final bioToken = await _storage.read(key: 'biometrics_enabled');
+    final name = await _storage.read(key: 'user_name');
+    final token = await _storage.read(key: 'jwt_token');
+    
+    // Only allow biometric button if:
+    // 1. User has successfully logged in before (has name & token)
+    // 2. User explicitly enabled biometrics in settings
+    if (mounted) {
+      setState(() {
+        _biometricsEnabled = (bioToken == 'true' && name != null && name.isNotEmpty && token != null);
+      });
+    }
+  }
+
+  void _handleBiometricLogin() async {
+    final name = await _storage.read(key: 'user_name');
+    if (name == null || name.isEmpty) return;
+    
+    if (!mounted) return;
+    Navigator.pushNamed(context, '/verify_face', arguments: name);
+  }
 
   void _handleLogin() async {
     final name = _nameController.text.trim();
@@ -104,9 +136,17 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
                             color: AppTheme.primaryColor,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.admin_panel_settings_outlined, color: AppTheme.secondaryTextColor),
-                          onPressed: () => Navigator.pushNamed(context, '/admin/login'),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.settings_outlined, color: AppTheme.secondaryTextColor),
+                              onPressed: () => Navigator.pushNamed(context, '/settings'),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppTheme.secondaryTextColor),
+                              onPressed: () => Navigator.pushNamed(context, '/admin/login'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -157,6 +197,19 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
                         prefixIcon: const Icon(Icons.lock_outline_rounded),
                       ),
                     ),
+                    if (_biometricsEnabled) ...[
+                      const SizedBox(height: 16),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: _handleBiometricLogin,
+                          icon: const Icon(Icons.face_unlock_rounded, color: AppTheme.primaryColor),
+                          label: Text(
+                            "Login with Face",
+                            style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (_isLoading) ...[
                       const SizedBox(height: 32),
                       const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
@@ -181,13 +234,10 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    Center(
-                      child: TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/settings'),
-                        child: Text(
-                          context.translate('settings'),
-                          style: TextStyle(color: AppTheme.secondaryTextColor),
-                        ),
+                    const Center(
+                      child: Text(
+                        "v1.5.2",
+                        style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12),
                       ),
                     ),
                   ],

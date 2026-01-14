@@ -29,6 +29,7 @@ def sync_customers():
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -117,9 +118,10 @@ def create_customer_online():
     print("=== CREATE CUSTOMER ONLINE ===")
     identity = get_jwt_identity()
     user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
+        (User.username == identity)
+        | (User.id == str(identity))
+        | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -164,7 +166,7 @@ def create_customer_online():
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             profile_image=data.get("profile_image"),
-            status="active",
+            status="active" if user.role == UserRole.ADMIN else "created",
             created_at=datetime.utcnow(),
         )
 
@@ -236,9 +238,10 @@ def get_customer_by_qr(qr_code):
 def list_customers():
     identity = get_jwt_identity()
     user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
+        (User.username == identity)
+        | (User.id == str(identity))
+        | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -325,6 +328,10 @@ def get_customer_detail(id):
     if not active_loan_obj:
         active_loan_obj = next(
             (loan for loan in customer_loans if loan.status == "approved"), None
+        )
+    if not active_loan_obj:
+        active_loan_obj = next(
+            (loan for loan in customer_loans if loan.status == "created"), None
         )
 
     active_loan = (
@@ -429,6 +436,7 @@ def update_customer_status(id):
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not user:
@@ -609,6 +617,7 @@ def lock_customer(id):
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not user or user.role != UserRole.ADMIN:
@@ -634,6 +643,7 @@ def unlock_customer(id):
         (User.mobile_number == identity)
         | (User.username == identity)
         | (User.id == identity)
+        | (User.name == identity)
     ).first()
 
     if not user or user.role != UserRole.ADMIN:

@@ -22,13 +22,14 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   // Real Data State
   Map<String, dynamic> _financialStats = {};
   Map<String, dynamic> _dailyOpsSummary = {};
   Map<String, dynamic>? _aiInsights;
+  Map<String, dynamic>? _autoAccountingData;
   List<dynamic> _recentActivity = [];
   bool _isLoading = true;
   String? _userName;
@@ -65,6 +66,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final stats = await _apiService.getKPIStats(token);
         final summary = await _apiService.getDailyOpsSummary(token);
         final insights = await _apiService.getAIInsights(token);
+        final autoAccounting = await _apiService.getAutoAccountingData();
         final activity = await _apiService.getAuditLogs(token);
         final name = await _storage.read(key: 'user_name');
         
@@ -73,6 +75,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             _financialStats = stats;
             _dailyOpsSummary = summary;
             _aiInsights = insights;
+            _autoAccountingData = autoAccounting;
             _recentActivity = activity.take(5).toList();
             _userName = name ?? 'Admin';
             _isLoading = false;
@@ -280,6 +283,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                _buildAutoAccountingSection(),
+                const SizedBox(height: 24),
                 _buildDailyPulseSection(),
                 const SizedBox(height: 24),
                 
@@ -349,8 +354,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       _buildModernActionTile(context, "Manage Lines", Icons.route_rounded, '/admin/lines'),
                       const SizedBox(width: 16),
                       _buildModernActionTile(context, "AI Risk", Icons.psychology_outlined, '/admin/risk_prediction'),
+                      const SizedBox(width: 16),
+                      _buildModernActionTile(context, "Operations", Icons.bolt_rounded, '/admin/optimization'),
                        const SizedBox(width: 16),
                        _buildModernActionTile(context, "Worker AI", Icons.analytics_outlined, '/admin/analytics'),
+                       const SizedBox(width: 16),
+                       _buildModernActionTile(context, "Live Tracking", Icons.map_rounded, '/admin/tracking'),
                        const SizedBox(width: 16),
                        _buildModernActionTile(context, context.translate('manage_customers'), Icons.people_outline, '/admin/customers'),
                       const SizedBox(width: 16),
@@ -784,6 +793,146 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
+
+  Widget _buildAutoAccountingSection() {
+    if (_autoAccountingData == null) return const SizedBox.shrink();
+    
+    final data = _autoAccountingData!;
+    final currencyFormatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A), // Slate-900 / Deep Dark
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.analytics_rounded, color: Color(0xFFD4FF8B), size: 20),
+                  const SizedBox(width: 8),
+                  Text("Auto-Accounting", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                ],
+              ),
+              Text(data['date'] ?? '', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccountingMiniCard(
+                  title: "Morning",
+                  value: currencyFormatter.format(data['morning'] ?? 0),
+                  icon: Icons.wb_sunny_rounded,
+                  color: Colors.orangeAccent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildAccountingMiniCard(
+                  title: "Evening",
+                  value: currencyFormatter.format(data['evening'] ?? 0),
+                  icon: Icons.nightlight_round,
+                  color: Colors.indigoAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccountingMiniCard(
+                  title: "Cash",
+                  value: currencyFormatter.format(data['cash'] ?? 0),
+                  icon: Icons.payments_rounded,
+                  color: Colors.greenAccent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildAccountingMiniCard(
+                  title: "UPI",
+                  value: currencyFormatter.format(data['upi'] ?? 0),
+                  icon: Icons.qr_code_scanner_rounded,
+                  color: Colors.lightBlueAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAccountingMiniCard(
+                  title: "Principal",
+                  value: currencyFormatter.format(data['loan_principal'] ?? 0),
+                  icon: Icons.account_balance_rounded,
+                  color: const Color(0xFFD4FF8B),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildAccountingMiniCard(
+                  title: "Interest",
+                  value: currencyFormatter.format(data['loan_interest'] ?? 0),
+                  icon: Icons.show_chart_rounded,
+                  color: Colors.pinkAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () => Navigator.pushNamed(context, '/admin/daily_reports'),
+              icon: const Icon(Icons.history_rounded, size: 18, color: Color(0xFFD4FF8B)),
+              label: Text("VIEW HISTORY & ARCHIVES", 
+                style: GoogleFonts.outfit(color: const Color(0xFFD4FF8B), fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.1)),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.05),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountingMiniCard({required String title, required String value, required IconData icon, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 8),
+          Text(title, style: const TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(value, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildStatItem(String label, String value, {bool isRed = false}) {
     return Column(

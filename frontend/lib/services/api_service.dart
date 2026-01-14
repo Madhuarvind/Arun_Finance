@@ -33,7 +33,7 @@ class ApiService {
   }
 
   String get _apiBase => baseUrl.replaceFirst('/auth', '');
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
 
 
 
@@ -519,7 +519,7 @@ class ApiService {
   Future<Map<String, dynamic>> createCustomer(Map<String, dynamic> data, String token) async {
     try {
       final response = await http.post(
-        Uri.parse('$_apiBase/collection/customers'),
+        Uri.parse('$_apiBase/customer/create'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -739,6 +739,22 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getAutoAccountingData() async {
+    try {
+      // NOTE: We recently disabled @jwt_required on this endpoint for easier n8n/widget integration
+      final response = await http.get(
+        Uri.parse('$_apiBase/reports/auto-accounting'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return {'msg': 'error', 'status': response.statusCode};
+    } catch (e) {
+      return {'msg': 'connection_failed', 'details': e.toString()};
+    }
+  }
+
   Future<List<dynamic>> getOutstandingReport(String token) async {
     try {
       final response = await http.get(
@@ -817,6 +833,59 @@ class ApiService {
   }
 
 
+  Future<List<dynamic>> getDailyReportsArchive(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/reports/daily-archive'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<Uint8List?> getDailyReportPDF(int reportId, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/reports/daily/pdf/$reportId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 15));
+      
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('getDailyReportPDF error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> updateLine(int lineId, Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$_apiBase/line/$lineId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data),
+      ).timeout(const Duration(seconds: 10));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed: $e'};
+    }
+  }
 
   Future<List<dynamic>> getAllLines(String token) async {
     try {
@@ -1125,6 +1194,21 @@ class ApiService {
       return {'msg': 'connection_failed'};
     }
   }
+  Future<Map<String, dynamic>> removeCustomerFromLine(int lineId, int customerId, String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_apiBase/line/$lineId/customer/$customerId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 10));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed'};
+    }
+  }
+
   // --- Settlement ---
   Future<List<dynamic>> getDailySettlements(String token) async {
     try {
@@ -1579,6 +1663,103 @@ class ApiService {
       return {'msg': 'server_error', 'code': response.statusCode};
     } catch (e) {
       debugPrint('getLineSummaryReport Error: $e');
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  // --- Resource Optimization ---
+  Future<Map<String, dynamic>> autoAssignWorkers(String token, {String? area, int? maxPerWorker, bool dryRun = false}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBase/ops/auto-assign-workers'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'area': area,
+          'max_per_worker': maxPerWorker,
+          'dry_run': dryRun
+        }),
+      ).timeout(const Duration(seconds: 30));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getBudgetSuggestion(String token, {double fund = 1000000}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/ops/budget-suggestion?fund=$fund'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 15));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  // --- Worker Tracking & Status ---
+  Future<Map<String, dynamic>> updateWorkerTracking({
+    required String token,
+    double? latitude,
+    double? longitude,
+    String? dutyStatus,
+    String? activity,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBase/worker/update-tracking'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+          'duty_status': dutyStatus,
+          'activity': activity,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  Future<List<dynamic>> getFieldAgentsLocation(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/worker/field-map'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 15));
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      debugPrint('getFieldAgentsLocation Error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> selfEnrollBiometric(String token, List<dynamic> embedding, String? deviceId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBase/worker/self-enroll-biometric'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'embedding': embedding,
+          'device_id': deviceId,
+        }),
+      ).timeout(const Duration(seconds: 15));
+      return jsonDecode(response.body);
+    } catch (e) {
       return {'msg': 'connection_failed'};
     }
   }

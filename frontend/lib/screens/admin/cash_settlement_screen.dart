@@ -14,7 +14,7 @@ class CashSettlementScreen extends StatefulWidget {
 
 class _CashSettlementScreenState extends State<CashSettlementScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   List<dynamic> _agents = [];
   List<dynamic> _history = [];

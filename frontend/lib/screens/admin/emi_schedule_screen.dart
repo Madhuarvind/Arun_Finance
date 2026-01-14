@@ -14,7 +14,7 @@ class EMIScheduleScreen extends StatefulWidget {
 
 class _EMIScheduleScreenState extends State<EMIScheduleScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   List<dynamic> _schedule = [];
   bool _isLoading = true;
 

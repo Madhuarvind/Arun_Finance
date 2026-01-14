@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, Customer, Loan, Collection, UserRole, EMISchedule, Line
+from models import db, User, Customer, Loan, Collection, UserRole, EMISchedule, Line, DailyAccountingReport
 from datetime import datetime, timedelta
 from sqlalchemy import func
+import io
+from fpdf import FPDF
 
 reports_bp = Blueprint("reports", __name__)
 
@@ -13,6 +15,7 @@ def get_admin_user():
         (User.username == identity)
         | (User.id == identity)
         | (User.mobile_number == identity)
+        | (User.name == identity)
     ).first()
     if user and user.role == UserRole.ADMIN:
         return user
@@ -605,49 +608,328 @@ def get_dashboard_insights():
 @reports_bp.route("/work-targets", methods=["GET"])
 @jwt_required()
 def get_work_targets():
-    """Weekly/Daily recovery targets for agents"""
+    """Detailed recovery targets (due today/overdue) for agents/admin"""
+    identity = get_jwt_identity()
+    user = User.query.filter(
+        (User.username == identity)
+        | (User.id == str(identity))
+        | (User.mobile_number == identity)
+        | (User.name == identity)
+    ).first()
+
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    try:
+        today = datetime.utcnow().date()
+        
+        # If admin, fetch for all lines. If agent, only for their lines.
+        if user.role == UserRole.ADMIN:
+            lines = Line.query.all()
+        else:
+            lines = Line.query.filter_by(agent_id=user.id).all()
+
+        targets = []
+        for line in lines:
+            # For each mapping in the line, check if they have a payment due today or overdue
+            for mapping in line.customers:
+                cust = mapping.customer
+                active_loans = Loan.query.filter_by(customer_id=cust.id, status='active').all()
+                
+                for loan in active_loans:
+                    # Find any pending EMIs due on or before today
+                    pending_emis = EMISchedule.query.filter(
+                        EMISchedule.loan_id == loan.id,
+                        EMISchedule.status != 'paid',
+                        func.date(EMISchedule.due_date) <= today
+                    ).all()
+
+                    if pending_emis:
+                        total_due = sum(emi.amount for emi in pending_emis)
+                        is_overdue = any(func.date(emi.due_date) < today for emi in pending_emis)
+                        
+                        targets.append({
+                            "customer_id": cust.id,
+                            "customer_name": cust.name,
+                            "loan_id": loan.loan_id,
+                            "area": cust.area,
+                            "agent_name": user.name if user.role != UserRole.ADMIN else (line.agent.name if line.agent else "N/A"),
+                            "amount_due": float(total_due),
+                            "is_overdue": is_overdue,
+                            "line_name": line.name
+                        })
+
+        return jsonify(targets), 200
+    except Exception as e:
+        return jsonify({"msg": str(e)}), 500
+@reports_bp.route("/auto-accounting", methods=["GET"])
+# @jwt_required() -- Disabled for n8n Agent access
+def get_auto_accounting():
+    """Aggregate data for AI Auto-Accounting Agent"""
+    # Note: Authorization check skipped for flexibility, or you can add it back
+    
+    try:
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = datetime.utcnow().replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        collections = db.session.query(Collection).filter(
+            Collection.created_at >= today_start,
+            Collection.created_at <= today_end,
+            Collection.status == "approved"
+        ).all()
+
+        total = 0.0
+        morning = 0.0
+        evening = 0.0
+        cash = 0.0
+        upi = 0.0
+        principal_part = 0.0
+        interest_part = 0.0
+
+        # Morning/Evening Cutoff: 2:00 PM (14:00)
+        cutoff_hour = 14
+
+        for c in collections:
+            amt = c.amount
+            total += amt
+            
+            # Time Split (UTC to IST approx adjustment if needed, but using server time for now)
+            # Assuming server is UTC, IST is +5.30. 
+            # If created_at is UTC, we should convert to local expected time for "Morning/Evening" logic
+            # IST = UTC + 5.5 hours
+            local_time = c.created_at + timedelta(hours=5, minutes=30)
+            
+            if local_time.hour < cutoff_hour:
+                morning += amt
+            else:
+                evening += amt
+            
+            # Mode Split
+            if c.payment_mode.lower() == "cash":
+                cash += amt
+            else:
+                upi += amt
+
+            # Principal vs Interest Split (Approximation)
+            loan = c.loan
+            if loan:
+                # Calculate simple interest ratio
+                p = loan.principal_amount or 0.0
+                r = loan.interest_rate or 0.0
+                t = loan.tenure or 100
+                unit = loan.tenure_unit or 'days'
+                
+                # Normalize time to years for formula
+                t_years = t
+                if unit == 'months':
+                    t_years = t / 12
+                elif unit == 'weeks':  # approx
+                    t_years = t / 52
+                elif unit == 'days':
+                    t_years = t / 365
+                
+                total_interest = (p * r * t_years) / 100
+                total_payable = p + total_interest
+                
+                if total_payable > 0:
+                    int_ratio = total_interest / total_payable
+                else:
+                    int_ratio = 0
+                
+                c_int = amt * int_ratio
+                c_prin = amt - c_int
+                
+                interest_part += c_int
+                principal_part += c_prin
+
+        return jsonify({
+            "total": round(total, 2),
+            "morning": round(morning, 2),
+            "evening": round(evening, 2),
+            "cash": round(cash, 2),
+            "upi": round(upi, 2),
+            "loan_principal": round(principal_part, 2),
+            "loan_interest": round(interest_part, 2),
+            "count": len(collections),
+            "date": datetime.now().strftime("%Y-%m-%d")
+        }), 200
+
+    except Exception as e:
+        return jsonify({"msg": str(e)}), 500
+
+
+@reports_bp.route("/auto-accounting/save", methods=["GET", "POST"])
+# @jwt_required() -- Potentially called by automation service (n8n)
+def save_daily_accounting():
+    """Triggered at end of day to save the daily summary to DB"""
+    from models import DailyAccountingReport
+
+    try:
+        # 1. Get Today's Stats from the existing logic
+        stats_response, status_code = get_auto_accounting()
+        if status_code != 200:
+            return stats_response, status_code
+
+        stats = stats_response.get_json()
+        report_date = datetime.utcnow().date()
+
+        # 2. Check if already exists (Update if so)
+        existing = DailyAccountingReport.query.filter_by(report_date=report_date).first()
+        if existing:
+            existing.total_amount = stats["total"]
+            existing.morning_amount = stats["morning"]
+            existing.evening_amount = stats["evening"]
+            existing.cash_amount = stats["cash"]
+            existing.upi_amount = stats["upi"]
+            existing.loan_principal = stats["loan_principal"]
+            existing.loan_interest = stats["loan_interest"]
+            existing.collection_count = stats["count"]
+        else:
+            new_report = DailyAccountingReport(
+                report_date=report_date,
+                total_amount=stats["total"],
+                morning_amount=stats["morning"],
+                evening_amount=stats["evening"],
+                cash_amount=stats["cash"],
+                upi_amount=stats["upi"],
+                loan_principal=stats["loan_principal"],
+                loan_interest=stats["loan_interest"],
+                collection_count=stats["count"],
+            )
+            db.session.add(new_report)
+
+        db.session.commit()
+        return jsonify({"msg": "Daily accounting report saved successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": str(e)}), 500
+
+
+@reports_bp.route("/daily-archive", methods=["GET"])
+@jwt_required()
+def get_daily_reports_archive():
+    """Get history of saved daily reports for admin dashboard"""
+    from models import DailyAccountingReport
+
     if not get_admin_user():
         return jsonify({"msg": "Admin access required"}), 403
 
     try:
-        # Simplified: Static targets or calculated based on lines
-        agents = User.query.filter_by(role=UserRole.FIELD_AGENT).all()
-        report = []
+        reports = (
+            DailyAccountingReport.query.order_by(DailyAccountingReport.report_date.desc())
+            .limit(30)
+            .all()
+        )
 
-        for agent in agents:
-            # Target = total pending balance in their assigned lines for the week
-            assigned_lines = Line.query.filter_by(agent_id=agent.id).all()
-            total_target = 0
-            for line in assigned_lines:
-                # Sum of EMIs due this week
-                today = datetime.utcnow().date()
-                start_week = today - timedelta(days=today.weekday())
-                end_week = start_week + timedelta(days=6)
-
-                line_cust_ids = [lc.customer_id for lc in line.customers]
-                weekly_emis = (
-                    db.session.query(func.sum(EMISchedule.amount))
-                    .join(Loan)
-                    .filter(
-                        Loan.customer_id.in_(line_cust_ids),
-                        func.date(EMISchedule.due_date) >= start_week,
-                        func.date(EMISchedule.due_date) <= end_week,
-                        EMISchedule.status != "paid",
-                    )
-                    .scalar()
-                    or 0
-                )
-                total_target += float(weekly_emis)
-
-            report.append(
-                {
-                    "agent_id": agent.id,
-                    "name": agent.name,
-                    "target": total_target,
-                    "achieved": 0,  # Logic to sum approved collections this week
-                }
-            )
-
-        return jsonify(report), 200
+        return (
+            jsonify(
+                [
+                    {
+                        "id": r.id,
+                        "date": r.report_date.isoformat(),
+                        "total": r.total_amount,
+                        "morning": r.morning_amount,
+                        "evening": r.evening_amount,
+                        "cash": r.cash_amount,
+                        "upi": r.upi_amount,
+                        "principal": r.loan_principal,
+                        "interest": r.loan_interest,
+                        "count": r.collection_count,
+                    }
+                    for r in reports
+                ]
+            ),
+            200,
+        )
     except Exception as e:
         return jsonify({"msg": str(e)}), 500
+
+
+@reports_bp.route("/daily/pdf/<int:report_id>", methods=["GET"])
+@jwt_required()
+def get_daily_report_pdf(report_id):
+    """Generate a PDF for a specific daily accounting report"""
+    if not get_admin_user():
+        return jsonify({"msg": "Admin access required"}), 403
+
+    report = DailyAccountingReport.query.get_or_404(report_id)
+
+    try:
+        # FPDF Instance
+        pdf = FPDF()
+        pdf.add_page()
+        
+        # 1. Header Section
+        pdf.set_font("Helvetica", "B", 22)
+        pdf.set_text_color(15, 23, 42) # Slate 900
+        pdf.cell(0, 15, "ARUN FINANCE", ln=True, align="C")
+        
+        pdf.set_font("Helvetica", "", 12)
+        pdf.set_text_color(100, 116, 139) # Slate 500
+        pdf.cell(0, 8, "Official Daily Accounting Statement", ln=True, align="C")
+        pdf.ln(2)
+        pdf.line(20, pdf.get_y(), 190, pdf.get_y())
+        pdf.ln(10)
+        
+        # 2. Date Section
+        pdf.set_font("Helvetica", "B", 14)
+        pdf.set_text_color(30, 41, 59)
+        pdf.cell(0, 10, f"Report Date: {report.report_date.strftime('%d %b %Y')}", ln=True, align="L")
+        pdf.ln(5)
+        
+        # 3. Main Summary Table
+        pdf.set_fill_color(248, 250, 252)
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 12, "  FINANCIAL BREAKDOWN", ln=True, fill=True)
+        pdf.set_font("Helvetica", "", 12)
+        
+        def add_row(label, value, is_bold=False, is_green=False):
+            pdf.set_x(15)
+            pdf.set_font("Helvetica", "B" if is_bold else "", 12)
+            if is_green: pdf.set_text_color(22, 101, 52)
+            else: pdf.set_text_color(30, 41, 59)
+            
+            pdf.cell(90, 12, f"{label}:", border="B" if is_bold else 0)
+            pdf.cell(0, 12, f"INR {value}", border="B" if is_bold else 0, ln=True, align="R")
+            pdf.set_text_color(30, 41, 59)
+
+        add_row("Total Collections Approved", f"{report.total_amount:,.2f}", is_bold=True, is_green=True)
+        pdf.ln(4)
+        add_row("Morning Session", f"{report.morning_amount:,.2f}")
+        add_row("Evening Session", f"{report.evening_amount:,.2f}")
+        pdf.ln(4)
+        add_row("Cash Payments", f"{report.cash_amount:,.2f}")
+        add_row("UPI Payments", f"{report.upi_amount:,.2f}")
+        pdf.ln(4)
+        add_row("Principal Collected", f"{report.loan_principal:,.2f}")
+        add_row("Interest Collected", f"{report.loan_interest:,.2f}")
+        
+        pdf.ln(10)
+        pdf.set_fill_color(241, 245, 249)
+        pdf.cell(0, 12, f"  Total Transactions: {report.collection_count}", ln=True, fill=True)
+        
+        # 4. Footer
+        pdf.set_y(-40)
+        pdf.set_font("Helvetica", "I", 9)
+        pdf.set_text_color(148, 163, 184)
+        pdf.cell(0, 5, "This is a computer-generated report and does not require a physical signature.", ln=True, align="C")
+        pdf.cell(0, 5, f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}", ln=True, align="C")
+
+        # Output to io buffer
+        pdf_out = pdf.output(dest='S')
+        if isinstance(pdf_out, str):
+            pdf_bytes = pdf_out.encode('latin-1')
+        else:
+            pdf_bytes = pdf_out
+            
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"Report_{report.report_date}.pdf"
+        )
+
+    except Exception as e:
+        print(f"PDF Error: {e}")
+        return jsonify({"msg": "Failed to generate PDF", "error": str(e)}), 500

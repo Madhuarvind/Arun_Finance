@@ -17,7 +17,7 @@ class LoanDocumentsScreen extends StatefulWidget {
 
 class _LoanDocumentsScreenState extends State<LoanDocumentsScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   List<dynamic> _documents = [];
   Map<String, dynamic>? _penaltySummary;

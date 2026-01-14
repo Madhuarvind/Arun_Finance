@@ -13,6 +13,7 @@ import 'screens/auth/face_verification_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/admin/master_settings_screen.dart';
 import 'screens/admin/risk_prediction_screen.dart';
+import 'screens/admin/optimization_dashboard.dart';
 import 'screens/admin/security_compliance_screen.dart';
 import 'screens/worker_dashboard.dart';
 import 'screens/profile_screen.dart';
@@ -36,6 +37,9 @@ import 'screens/agent/agent_performance_screen.dart';
 import 'screens/agent/agent_collection_history_screen.dart';
 import 'screens/admin/database_viewer_screen.dart';
 import 'screens/public_passbook_screen.dart';
+import 'screens/admin/daily_reports_screen.dart';
+import 'screens/admin/live_tracking_screen.dart';
+import 'screens/face_enrollment_screen.dart';
 
 late List<CameraDescription> cameras;
 
@@ -111,7 +115,7 @@ class VasoolDriveApp extends StatelessWidget {
         '/home': (context) => const WorkerDashboard(),
         '/profile': (context) => const ProfileScreen(),
         '/security': (context) => const SecuritySettingsScreen(),
-        // '/enroll_face': (context) => const FaceEnrollmentScreen(), // Removed invalid route
+        '/enroll_face': (context) => const FaceEnrollmentScreen(),
         '/collection_entry': (context) => const CollectionEntryScreen(),
         '/admin/review': (context) => const ManagerReviewScreen(),
         '/admin/financial_stats': (context) => const FinancialAnalyticsScreen(),
@@ -132,8 +136,11 @@ class VasoolDriveApp extends StatelessWidget {
         '/admin/collection_ledger': (context) => const CollectionLedgerScreen(),
         '/admin/master_settings': (context) => const MasterSettingsScreen(),
         '/admin/risk_prediction': (context) => const RiskPredictionScreen(),
+        '/admin/optimization': (context) => const OptimizationDashboard(),
         '/admin/security': (context) => const SecurityComplianceScreen(),
         '/admin/db_viewer': (context) => const DatabaseViewerScreen(),
+        '/admin/daily_reports': (context) => const DailyReportsScreen(),
+        '/admin/tracking': (context) => const LiveTrackingScreen(),
         '/worker/performance': (context) => const AgentPerformanceScreen(),
         '/agent/collections': (context) => const AgentCollectionHistoryScreen(),
         '/public/passbook': (context) {

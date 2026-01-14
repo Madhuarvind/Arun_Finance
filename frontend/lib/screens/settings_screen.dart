@@ -13,7 +13,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   String? _role;
   bool _isLoading = true;
   @override
@@ -100,15 +100,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 
                 const SizedBox(height: 16),
 
-                _buildActionCard(
-                  context,
-                  "Security Hub",
-                  "Manage your biometric and login security",
-                  Icons.security,
-                  const Color(0xFFEFF6FF),
-                  const Color(0xFF3B82F6),
-                  () => Navigator.pushNamed(context, '/security')
-                ),
+                if (_role != null) ...[
+                  const SizedBox(height: 16),
+                  _buildActionCard(
+                    context,
+                    "Security Hub",
+                    "Manage your biometric and login security",
+                    Icons.security,
+                    const Color(0xFFEFF6FF),
+                    const Color(0xFF3B82F6),
+                    () => Navigator.pushNamed(context, '/security')
+                  ),
+                ],
                 
                 if (_role == 'admin') ...[
                   const SizedBox(height: 16),

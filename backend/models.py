@@ -33,6 +33,14 @@ class User(db.Model):
     last_login = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # --- Live Tracking & Status ---
+    last_latitude = db.Column(db.Float, nullable=True)
+    last_longitude = db.Column(db.Float, nullable=True)
+    last_location_update = db.Column(db.DateTime, nullable=True)
+    duty_status = db.Column(db.String(20), default="off_duty")  # 'on_duty', 'off_duty'
+    current_activity = db.Column(db.String(100), default="idle")  # 'idle', 'moving', 'collecting'
+    last_biometric_login = db.Column(db.DateTime, nullable=True)
+
     # Manager Hierarchy
     manager_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     assigned_agents = db.relationship(
@@ -243,6 +251,7 @@ class Collection(db.Model):
     loan = db.relationship(
         "Loan", backref=db.backref("collections", cascade="all, delete-orphan")
     )
+    agent = db.relationship("User", backref="collections")
 
 
 class Line(db.Model):
@@ -302,6 +311,16 @@ class DailySettlement(db.Model):
 
     agent = db.relationship("User", foreign_keys=[agent_id], backref="settlements")
     verifier = db.relationship("User", foreign_keys=[verified_by])
+
+
+class OTPLog(db.Model):
+    __tablename__ = "otp_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    mobile_number = db.Column(db.String(15), nullable=False)
+    otp_code = db.Column(db.String(6), nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # Phase 3A: Production-Grade Customer Management Models
@@ -366,3 +385,18 @@ class SystemSetting(db.Model):
     value = db.Column(db.Text, nullable=False)
     description = db.Column(db.String(255), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class DailyAccountingReport(db.Model):
+    __tablename__ = "daily_accounting_reports"
+    id = db.Column(db.Integer, primary_key=True)
+    report_date = db.Column(db.Date, unique=True, nullable=False)
+    total_amount = db.Column(db.Float, default=0.0)
+    morning_amount = db.Column(db.Float, default=0.0)
+    evening_amount = db.Column(db.Float, default=0.0)
+    cash_amount = db.Column(db.Float, default=0.0)
+    upi_amount = db.Column(db.Float, default=0.0)
+    loan_principal = db.Column(db.Float, default=0.0)
+    loan_interest = db.Column(db.Float, default=0.0)
+    collection_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

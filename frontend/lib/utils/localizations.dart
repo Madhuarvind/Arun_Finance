@@ -198,6 +198,9 @@ class AppLocalizations {
       'system_configuration': 'System Configuration',
       'enrollment_guide': 'Position your face in the oval',
       'check_photo': 'Check if photo is clear',
+      'collection_window_closed': 'Collection window is closed',
+      'already_collected_today': 'Already collected for today',
+      'collection_history': 'Collection History',
     },
     'ta': {
       'app_title': 'வசூல் டிரைவ்',
@@ -388,6 +391,9 @@ class AppLocalizations {
       'system_configuration': 'கணினி கட்டமைப்பு',
       'enrollment_guide': 'உங்கள் முகத்தை வட்டத்தில் வைக்கவும்',
       'check_photo': 'புகைப்படம் தெளிவாக உள்ளதா என சரிபார்க்கவும்',
+      'collection_window_closed': 'வசூல் நேரம் முடிந்தது',
+      'already_collected_today': 'இன்று ஏற்கனவே வசூலிக்கப்பட்டது',
+      'collection_history': 'வசூல் வரலாறு',
     },
   };
 

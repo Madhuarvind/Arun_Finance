@@ -7,7 +7,7 @@ import 'local_db_service.dart';
 class SyncService {
   final ApiService _apiService = ApiService();
   final LocalDbService _localDb = LocalDbService();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   Future<void> syncCollections() async {
     if (kIsWeb) return;

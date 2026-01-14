@@ -19,7 +19,7 @@ class CollectionEntryScreen extends StatefulWidget {
 
 class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   int _currentStep = 0;
   List<dynamic> _customers = [];

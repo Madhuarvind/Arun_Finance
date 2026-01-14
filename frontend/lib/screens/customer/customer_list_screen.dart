@@ -17,7 +17,7 @@ class CustomerListScreen extends StatefulWidget {
 class _CustomerListScreenState extends State<CustomerListScreen> {
   final _localDb = LocalDbService();
   final _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   
   List<Map<String, dynamic>> _customers = [];
   bool _isLoading = true;

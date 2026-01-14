@@ -15,7 +15,7 @@ class PerformanceAnalyticsScreen extends StatefulWidget {
 
 class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen> {
   final ApiService _apiService = ApiService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = FlutterSecureStorage();
   Map<String, dynamic>? _stats;
   bool _isLoading = true;
 

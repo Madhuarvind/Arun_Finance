@@ -34,6 +34,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
   bool _isLoading = false;
   String? _statusMessage;
   bool _cameraInitialized = false;
+  Uint8List? _webImageBytes;
 
   @override
   void initState() {
@@ -73,9 +74,21 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     try {
       await _initializeControllerFuture;
       final image = await _controller!.takePicture();
-      setState(() {
-        _imageFile = image;
-      });
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        if (mounted) {
+          setState(() {
+            _imageFile = image;
+            _webImageBytes = bytes;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _imageFile = image;
+          });
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -202,8 +215,8 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                       ),
                       child: ClipOval(
                         child: _imageFile != null
-                            ? (kIsWeb 
-                                ? Image.network(_imageFile!.path, fit: BoxFit.cover)
+                            ? (kIsWeb && _webImageBytes != null
+                                ? Image.memory(_webImageBytes!, fit: BoxFit.cover)
                                 : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
                             : !_cameraInitialized
                                 ? Center(
