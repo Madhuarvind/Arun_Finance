@@ -3,17 +3,14 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Customer, Loan, Collection, EMISchedule, UserRole
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from utils.auth_helpers import get_user_by_identity
 
 analytics_bp = Blueprint("analytics", __name__)
 
 
 def get_admin_user():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-    ).first()
+    user = get_user_by_identity(identity)
     if user and user.role == UserRole.ADMIN:
         return user
     return None

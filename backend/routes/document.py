@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Loan, LoanDocument, SystemSetting, EMISchedule
+from utils.auth_helpers import get_user_by_identity
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -23,9 +24,7 @@ def allowed_file(filename):
 def upload_loan_document(loan_id):
     """Upload a document for a loan"""
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity) | (User.id == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -104,9 +103,7 @@ def get_loan_documents(loan_id):
 def delete_document(doc_id):
     """Delete a document"""
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity) | (User.id == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if user.role.value != "admin":
         return jsonify({"msg": "Admin access required"}), 403

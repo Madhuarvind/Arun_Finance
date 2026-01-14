@@ -9,14 +9,13 @@ from fpdf import FPDF
 reports_bp = Blueprint("reports", __name__)
 
 
+from utils.auth_helpers import get_user_by_identity
+
 def get_admin_user():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    # Safe lookup helper prevents PostgreSQL 500 error
+    user = get_user_by_identity(identity)
+    
     if user and user.role == UserRole.ADMIN:
         return user
     return None
@@ -610,12 +609,8 @@ def get_dashboard_insights():
 def get_work_targets():
     """Detailed recovery targets (due today/overdue) for agents/admin"""
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    # Safe lookup
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404

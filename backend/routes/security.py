@@ -10,6 +10,7 @@ from models import (
     LoanAuditLog,
     LoginLog,
 )
+from utils.auth_helpers import get_user_by_identity
 from datetime import datetime, timedelta
 import csv
 import io
@@ -19,11 +20,7 @@ security_bp = Blueprint("security", __name__)
 
 def get_admin_user():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-    ).first()
+    user = get_user_by_identity(identity)
     if user and user.role == UserRole.ADMIN:
         return user
     return None

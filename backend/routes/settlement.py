@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Collection, DailySettlement, UserRole
 from datetime import datetime, date
 from sqlalchemy import func
+from utils.auth_helpers import get_user_by_identity
 
 settlement_bp = Blueprint("settlement", __name__)
 
@@ -14,11 +15,7 @@ def get_todays_status():
     Get list of agents and their collection status for today.
     """
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -79,11 +76,7 @@ def get_todays_status():
 @jwt_required()
 def verify_settlement():
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -145,11 +138,7 @@ def verify_settlement():
 @jwt_required()
 def get_settlement_history():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403

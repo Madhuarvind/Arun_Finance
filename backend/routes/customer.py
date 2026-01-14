@@ -12,6 +12,7 @@ from models import (
 )
 from datetime import datetime, timedelta
 import uuid
+from utils.auth_helpers import get_user_by_identity
 
 customer_bp = Blueprint("customer", __name__)
 
@@ -25,12 +26,7 @@ def sync_customers():
     """
     print("=== SYNC CUSTOMER REQUEST RECEIVED ===")
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         print(f"User not found for identity: {identity}")
@@ -117,12 +113,7 @@ def create_customer_online():
     """Create customer directly on server (for web/online mode)"""
     print("=== CREATE CUSTOMER ONLINE ===")
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -237,12 +228,7 @@ def get_customer_by_qr(qr_code):
 @jwt_required()
 def list_customers():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -432,12 +418,7 @@ def update_customer_status(id):
     from utils.customer_lifecycle import validate_status_transition
 
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404

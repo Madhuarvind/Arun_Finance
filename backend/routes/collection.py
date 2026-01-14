@@ -10,6 +10,7 @@ from models import (
     EMISchedule,
     LoanAuditLog,
 )
+from utils.auth_helpers import get_user_by_identity
 from datetime import datetime, timedelta
 from utils.interest_utils import (  # noqa: F401
     calculate_flat_emi,
@@ -25,12 +26,7 @@ collection_bp = Blueprint("collection", __name__)
 @jwt_required()
 def submit_collection():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -278,11 +274,7 @@ def get_customers():
 @jwt_required()
 def create_customer():
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Admin Access Required"}), 403
@@ -360,9 +352,7 @@ def get_customer_loans(customer_id):
 @jwt_required()
 def get_pending_collections():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Admin Access Required"}), 403
@@ -403,12 +393,7 @@ def get_pending_collections():
 @jwt_required()
 def update_collection_status(collection_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role == UserRole.FIELD_AGENT:
         return jsonify({"msg": "Access Denied"}), 403

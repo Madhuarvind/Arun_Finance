@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 import bcrypt
 
 from datetime import datetime, timedelta
+from utils.auth_helpers import get_user_by_identity
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -366,10 +367,8 @@ def refresh_token():
 @auth_bp.route("/register-worker", methods=["POST"])
 @jwt_required()
 def register_worker():
-    identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
-    ).first()
+    # Safe lookup
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -445,13 +444,8 @@ def register_face():
         device_id = request.form.get("device_id")
         identity = get_jwt_identity()
 
-        # Resolve the requester
-        requester = User.query.filter(
-            (User.id == identity) | 
-            (User.name == identity) | 
-            (User.mobile_number == identity) | 
-            (User.username == identity)
-        ).first()
+        # Resolve the requester safely
+        requester = get_user_by_identity(identity)
 
         if not requester:
             return jsonify({"msg": "unauthorized"}), 403
@@ -543,12 +537,7 @@ def list_users():
 @jwt_required()
 def reset_device():
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -570,12 +559,7 @@ def reset_device():
 @jwt_required()
 def get_audit_logs():
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -604,12 +588,7 @@ def get_audit_logs():
 @jwt_required()
 def clear_biometrics(user_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -626,12 +605,7 @@ def clear_biometrics(user_id):
 @jwt_required()
 def reset_user_pin(user_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -657,12 +631,7 @@ def reset_user_pin(user_id):
 @jwt_required()
 def get_user_detail(user_id):
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -705,10 +674,8 @@ def get_user_detail(user_id):
 @auth_bp.route("/users/<int:user_id>", methods=["PUT"])
 @jwt_required()
 def update_user(user_id):
-    identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
-    ).first()
+    # Safe lookup
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -745,10 +712,8 @@ def update_user(user_id):
 @auth_bp.route("/users/<int:user_id>/status", methods=["PATCH"])
 @jwt_required()
 def toggle_user_status(user_id):
-    identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
-    ).first()
+    # Safe lookup
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -780,10 +745,8 @@ def toggle_user_status(user_id):
 @auth_bp.route("/users/<int:user_id>", methods=["DELETE"])
 @jwt_required()
 def delete_user(user_id):
-    identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity) | (User.username == identity)
-    ).first()
+    # Safe lookup
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403

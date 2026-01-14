@@ -11,6 +11,7 @@ from models import (
     EMISchedule,
     Collection,
 )
+from utils.auth_helpers import get_user_by_identity
 from datetime import datetime
 from utils.interest_utils import get_distance_meters
 from utils.ml_risk import risk_engine
@@ -23,12 +24,7 @@ line_bp = Blueprint("line", __name__)
 @jwt_required()
 def create_line():
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -63,17 +59,7 @@ def create_line():
 @jwt_required()
 def get_all_lines():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
-
-    if not user:
-        return jsonify({"msg": "User not found"}), 404
-
-    # Admins see all lines, Agents see only their assigned lines
+    user = get_user_by_identity(identity) # Admins see all lines, Agents see only their assigned lines
     if user.role == UserRole.ADMIN:
         lines = Line.query.all()
     else:
@@ -104,12 +90,7 @@ def get_all_lines():
 @jwt_required()
 def update_line(line_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -142,12 +123,7 @@ def update_line(line_id):
 @jwt_required()
 def assign_agent(line_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -169,12 +145,7 @@ def assign_agent(line_id):
 @jwt_required()
 def add_customer_to_line(line_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -270,12 +241,7 @@ def get_line_customers(line_id):
 @jwt_required()
 def reorder_line_customers(line_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -309,12 +275,7 @@ def reorder_line_customers(line_id):
 @jwt_required()
 def toggle_line_lock(line_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -418,12 +379,7 @@ def optimize_line_route(line_id):
 def bulk_reassign_agent():
     """Swap all customers and lines from one agent to another"""
     identity = get_jwt_identity()
-    admin = User.query.filter(
-        (User.mobile_number == identity)
-        | (User.username == identity)
-        | (User.id == identity)
-        | (User.name == identity)
-    ).first()
+    admin = get_user_by_identity(identity)
 
     if not admin or admin.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403
@@ -466,12 +422,7 @@ def bulk_reassign_agent():
 @jwt_required()
 def remove_customer_from_line(line_id, customer_id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user or user.role != UserRole.ADMIN:
         return jsonify({"msg": "Access Denied"}), 403

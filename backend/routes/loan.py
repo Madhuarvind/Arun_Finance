@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, User, Loan, EMISchedule, LoanAuditLog, Collection
 from datetime import datetime
+from utils.auth_helpers import get_user_by_identity
 from utils.interest_utils import (
     calculate_flat_emi,
     calculate_reducing_emi,
@@ -15,12 +16,7 @@ loan_bp = Blueprint("loan", __name__)
 @jwt_required()
 def create_loan():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == str(identity))
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -108,13 +104,8 @@ def create_loan():
 @jwt_required()
 def approve_loan(id):
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
-
+    user = get_user_by_identity(identity)
+    
     if user.role.value != "admin":
         return jsonify({"msg": "Admin access required"}), 403
 
@@ -232,12 +223,7 @@ def activate_loan(id):
 def foreclose_loan(id):
     """Foreclose/Settle a loan early"""
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     loan = Loan.query.get_or_404(id)
     if loan.status != "active":
@@ -293,12 +279,7 @@ def foreclose_loan(id):
 @jwt_required()
 def get_all_loans():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     status_filter = request.args.get("status")
 
