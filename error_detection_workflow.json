@@ -1,0 +1,96 @@
+{
+    "name": "Error Detection Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "validate-collection",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                460,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "=https://vasool-drive-backend.onrender.com/api/collection/history/{{$json[\"body\"][\"loan_id\"]}}",
+                "method": "GET",
+                "authentication": "none",
+                "options": {}
+            },
+            "name": "Fetch History",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                680,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "const history = items[0].json.history;\nconst hasEntryToday = items[0].json.has_entry_today;\nconst inputAmount = $node[\"Webhook\"].json[\"body\"][\"amount\"];\n\nlet warnings = [];\n\n// 1. Double Entry Check\nif (hasEntryToday) {\n    warnings.push(\"Double Entry: Payment already recorded today.\");\n}\n\n// 2. Abnormal Amount Check\nif (history.length > 0) {\n    const total = history.reduce((sum, item) => sum + item.amount, 0);\n    const avg = total / history.length;\n    \n    // Thresholds: < 50% or > 200% of average\n    if (inputAmount < (avg * 0.5)) {\n         warnings.push(`Abnormal Amount: ₹${inputAmount} is very low. Average is ₹${avg.toFixed(0)}.`);\n    } else if (inputAmount > (avg * 2.0)) {\n         warnings.push(`Abnormal Amount: ₹${inputAmount} is very high. Average is ₹${avg.toFixed(0)}.`);\n    }\n}\n\nif (warnings.length > 0) {\n    return [{ json: { status: \"warning\", message: warnings.join(\" \") } }];\n} else {\n    return [{ json: { status: \"ok\" } }];\n}"
+            },
+            "name": "Validation Agent Algorithm",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                900,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{$json}}",
+                "options": {}
+            },
+            "name": "Respond to App",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                1120,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch History",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch History": {
+            "main": [
+                [
+                    {
+                        "node": "Validation Agent Algorithm",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validation Agent Algorithm": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to App",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

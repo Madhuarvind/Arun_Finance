@@ -9,6 +9,7 @@ from models import (
     UserRole,
     EMISchedule,
     LoanAuditLog,
+    Line,
 )
 from utils.auth_helpers import get_user_by_identity
 from datetime import datetime, timedelta
@@ -607,9 +608,6 @@ def get_collection_history():
         .all()
     )
 
-    if history:
-        print(f"DEBUG: Collection object attributes: {dir(history[0])}")
-
     return (
         jsonify(
             [
@@ -630,3 +628,25 @@ def get_collection_history():
         ),
         200,
     )
+
+# Helper: Collection History for N8n
+# This endpoint allows N8n to fetch raw history to calculate averages.
+@collection_bp.route("/history/<int:loan_id>", methods=["GET"])
+def get_loan_collection_history(loan_id):
+    # Fetch last 10 approved collections
+    collections = Collection.query.filter_by(loan_id=loan_id, status='approved')\
+        .order_by(Collection.created_at.desc()).limit(10).all()
+    
+    data = [{
+        "amount": c.amount,
+        "date": c.created_at.isoformat()
+    } for c in collections]
+    
+    # Check for today's entry
+    today = datetime.utcnow().date()
+    has_today = any(c.created_at.date() == today for c in collections)
+    
+    return jsonify({
+        "history": data,
+        "has_entry_today": has_today
+    }), 200

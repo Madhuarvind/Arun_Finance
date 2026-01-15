@@ -126,7 +126,22 @@ class VasoolDriveApp extends StatelessWidget {
            if (line is Map<String, dynamic>) {
              return LineCustomersScreen(line: line);
            }
-           return const Scaffold(body: Center(child: Text('Error: Missing line details')));
+           return Scaffold(
+             appBar: AppBar(title: const Text("Error")),
+             body: Center(
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   const Text('Error: Missing line details (Try navigating back)'),
+                   const SizedBox(height: 16),
+                   ElevatedButton(
+                     onPressed: () => Navigator.pushReplacementNamed(context, '/admin/lines'),
+                     child: const Text("Back to Manage Lines"),
+                   )
+                 ],
+               ),
+             ),
+           );
         },
         '/agent/lines': (context) => const AgentLinesScreen(),
         '/admin/customers': (context) => const AdminCustomerListScreen(),

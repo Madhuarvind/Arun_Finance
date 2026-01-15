@@ -24,6 +24,7 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
   final _maxLoanController = TextEditingController();
   final _upiIdController = TextEditingController();
   final _upiQrUrlController = TextEditingController();
+  final _n8nUrlController = TextEditingController();
   
   // Toggles
   bool _workerCanEditCustomer = false;
@@ -38,6 +39,8 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
     final token = await _storage.read(key: 'jwt_token');
     if (token != null) {
       final settings = await _apiService.getSystemSettings(token);
+      final n8nUrl = await _apiService.getN8nAgentUrl(); // Load local
+      
       if (mounted) {
         setState(() {
           _interestRateController.text = settings['default_interest_rate'] ?? '10.0';
@@ -46,6 +49,7 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
           _maxLoanController.text = settings['max_loan_amount'] ?? '50000.0';
           _upiIdController.text = settings['upi_id'] ?? 'arun.finance@okaxis';
           _upiQrUrlController.text = settings['upi_qr_url'] ?? '';
+          _n8nUrlController.text = n8nUrl;
           _workerCanEditCustomer = (settings['worker_can_edit_customer'] ?? 'false') == 'true';
           _isLoading = false;
         });
@@ -59,6 +63,7 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
     setState(() => _isLoading = true);
     final token = await _storage.read(key: 'jwt_token');
     if (token != null) {
+      // 1. Save Backend Settings
       final data = {
         "default_interest_rate": _interestRateController.text,
         "penalty_amount": _penaltyController.text,
@@ -70,6 +75,10 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
       };
       
       final result = await _apiService.updateSystemSettings(data, token);
+      
+      // 2. Save Local Settings (N8n)
+      await _apiService.saveN8nAgentUrl(_n8nUrlController.text);
+
       if (mounted) {
          setState(() => _isLoading = false);
          if (result['msg'] == 'Settings updated successfully') {
@@ -125,6 +134,12 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
                    _buildCard([
                      _buildTextField("Default UPI ID", _upiIdController, icon: Icons.account_balance_wallet_rounded),
                      _buildTextField("Custom QR Image URL (Optional)", _upiQrUrlController, icon: Icons.image_rounded),
+                   ]),
+                   
+                   const SizedBox(height: 24),
+                   _buildSectionHeader("AI Integrations"),
+                   _buildCard([
+                     _buildTextField("Error Detection Agent URL (N8n)", _n8nUrlController, icon: Icons.webhook_rounded),
                    ]),
                    
                    const SizedBox(height: 24),

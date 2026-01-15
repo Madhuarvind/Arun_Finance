@@ -60,7 +60,22 @@ class _AgentLinesScreenState extends State<AgentLinesScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _lines.isEmpty
               ? Center(
-                  child: Text(AppLocalizations.of(context).translate('no_lines_found')),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.assignment_late_outlined, size: 60, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No line assigned for you",
+                        style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Please contact your admin for assignment.",
+                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),

@@ -68,7 +68,10 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
         setState(() {
           // ENSURE UNIQUE CUSTOMERS TO PREVENT GlobalKey ERRORS
           final seenIds = <int>{};
-          _lineCustomers = lineCusts.where((c) => seenIds.add(c['id'] as int)).toList();
+          _lineCustomers = lineCusts.where((c) {
+             final id = int.tryParse(c['id'].toString()) ?? 0;
+             return seenIds.add(id);
+          }).toList();
           
           _collectedCustomers = _lineCustomers.where((c) => collectedIdMap.containsKey(c['id'])).map((c) {
              final coll = collectedIdMap[c['id']];
