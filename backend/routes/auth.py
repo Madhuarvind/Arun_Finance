@@ -13,6 +13,10 @@ from datetime import datetime, timedelta
 from utils.auth_helpers import get_user_by_identity
 
 auth_bp = Blueprint("auth", __name__)
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @auth_bp.route("/set-pin", methods=["POST"])
@@ -262,11 +266,13 @@ def admin_login():
         print(f"DEBUG: Admin login failed - User '{username}' not found in DB")
         return jsonify({"msg": f"Access Denied: User '{username}' not found"}), 403
 
-    if user.role != UserRole.ADMIN:
+    # Normalize role check
+    current_role = user.role.value if hasattr(user.role, 'value') else user.role
+    if current_role != UserRole.ADMIN.value:
         print(
-            f"DEBUG: Admin login failed - User '{username}' has role {user.role}, expected {UserRole.ADMIN}"
+            f"DEBUG: Admin login failed - User '{username}' has role {current_role}, expected {UserRole.ADMIN.value}"
         )
-        return jsonify({"msg": f"Access Denied: Incorrect role {user.role}"}), 403
+        return jsonify({"msg": f"Access Denied: Incorrect role {current_role}"}), 403
 
     if not user.password_hash or not bcrypt.checkpw(
         password.encode("utf-8"), user.password_hash.encode("utf-8")
@@ -369,9 +375,18 @@ def refresh_token():
 def register_worker():
     # Safe lookup
     admin = get_user_by_identity(identity)
+    
+    logger.info(f"Register Worker Request by: {identity}")
 
-    if not admin or admin.role != UserRole.ADMIN:
+    if not admin:
+        logger.error(f"Access Denied: Admin user not found for identity {identity}")
         return jsonify({"msg": "Access Denied"}), 403
+
+    # Ensure role comparison works for both Enum object and string value from DB
+    current_role = admin.role.value if hasattr(admin.role, 'value') else admin.role
+    if current_role != UserRole.ADMIN.value:
+         logger.error(f"Access Denied: User {admin.name} has role {current_role}, expected {UserRole.ADMIN.value}")
+         return jsonify({"msg": "Access Denied"}), 403
 
     data = request.get_json()
     name = data.get("name", "").strip()

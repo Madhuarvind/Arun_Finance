@@ -137,9 +137,16 @@ def create_customer_online():
 
         # Generate Unique Customer ID
         current_year = datetime.now().year
-        count = Customer.query.filter(
-            Customer.created_at >= datetime(current_year, 1, 1)
-        ).count()
+        # Fix PostgreSQL Date Comparison logic
+        try:
+             count = Customer.query.filter(
+                db.extract('year', Customer.created_at) == current_year
+            ).count()
+        except:
+             # Fallback for SQLite/MySQL if extract fails
+             count = Customer.query.filter(
+                Customer.created_at >= datetime(current_year, 1, 1)
+            ).count()
         cust_unique_id = f"CUST-{current_year}-{str(count + 1).zfill(6)}"
 
         while Customer.query.filter_by(customer_id=cust_unique_id).first():
