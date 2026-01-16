@@ -186,8 +186,6 @@ class _AdminDashboardState extends State<AdminDashboard> with TickerProviderStat
             ),
             child: SafeArea( // Added SafeArea to avoid overlap with transparent AppBar and status bar
               bottom: false, // Let content go behind bottom nav if needed, or stick to safe area
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
                 child: IndexedStack(
                   index: _currentIndex,
                   children: [
@@ -195,7 +193,6 @@ class _AdminDashboardState extends State<AdminDashboard> with TickerProviderStat
                      const CashSettlementScreen(isTab: true),
                   ],
                 ),
-              ),
             ),
           ),
           floatingActionButton: _currentIndex == 0 ? FloatingActionButton.extended(
