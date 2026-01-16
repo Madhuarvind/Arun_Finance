@@ -42,29 +42,20 @@ class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
     final double progress = (_stats['collected'] / _stats['goal']).clamp(0.0, 1.0);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        title: Text('My AI Performance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text('My AI Performance', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white70),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildGoalCard(progress),
-                  const SizedBox(height: 32),
-                  Text('AI Insights', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  _buildInsightCard(
-                    "On Track",
-                    "You have collected ${(_stats['collected'] / _stats['goal'] * 100).toStringAsFixed(1)}% of your monthly goal. Keep it up!",
-                    Icons.trending_up_rounded,
-                    Colors.green,
-                  ),
                   const SizedBox(height: 16),
                   _buildInsightCard(
                     "Collection Velocity",
@@ -82,25 +73,19 @@ class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
 
   Widget _buildGoalCard(double progress) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1A1A), Color(0xFF333333)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))
-        ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Monthly Goal', style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.w600)),
-              Text('₹${_stats['goal']}', style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+              Text('MONTHLY GOAL', style: GoogleFonts.outfit(color: Colors.white24, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+              Text('₹${_stats['goal']}', style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.w900, fontSize: 18)),
             ],
           ),
           const SizedBox(height: 24),
@@ -142,9 +127,9 @@ class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,9 +144,9 @@ class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(title.toUpperCase(), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 12, letterSpacing: 0.5)),
                 const SizedBox(height: 4),
-                Text(desc, style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12, height: 1.4)),
+                Text(desc, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12, height: 1.4)),
               ],
             ),
           ),
@@ -187,20 +172,24 @@ class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
 
   Widget _buildMiniStat(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
-          Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(height: 12),
+          Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.white)),
+          Text(label.toUpperCase(), style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
         ],
       ),
     );

@@ -20,7 +20,7 @@ class AdminDashboard extends StatefulWidget {
   State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
+class _AdminDashboardState extends State<AdminDashboard> with TickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   final _storage = FlutterSecureStorage();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -38,12 +38,31 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   int _currentIndex = 0;
 
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  late TabController _tabController;
+  
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTab;
+    _pulseController = AnimationController(
+       duration: const Duration(seconds: 2),
+       vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
+       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    _tabController = TabController(length: 2, vsync: this);
     _loadUser();
     _fetchDashboardData();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _loadUser() async {
@@ -139,6 +158,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       builder: (context, languageProvider, child) {
         return Scaffold(
           key: _scaffoldKey,
+          extendBodyBehindAppBar: true,
           drawer: AppDrawer(
             userName: _userName ?? 'Administrator',
             role: _role ?? 'admin',
@@ -148,29 +168,40 @@ class _AdminDashboardState extends State<AdminDashboard> {
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
+            backgroundColor: const Color(0xFF0F172A),
             selectedItemColor: AppTheme.primaryColor,
-            unselectedItemColor: Colors.grey,
+            unselectedItemColor: Colors.white54,
             items: [
               BottomNavigationBarItem(icon: const Icon(Icons.dashboard_rounded), label: context.translate('dashboard')),
               BottomNavigationBarItem(icon: const Icon(Icons.currency_rupee_rounded), label: context.translate('tally')),
             ],
           ),
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
-              child: IndexedStack(
-                index: _currentIndex,
-                children: [
-                   _buildDashboardBody(context, languageProvider),
-                   const CashSettlementScreen(isTab: true),
-                ],
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
+            child: SafeArea( // Added SafeArea to avoid overlap with transparent AppBar and status bar
+              bottom: false, // Let content go behind bottom nav if needed, or stick to safe area
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: IndexedStack(
+                  index: _currentIndex,
+                  children: [
+                     _buildDashboardBody(context, languageProvider),
+                     const CashSettlementScreen(isTab: true),
+                  ],
+                ),
               ),
             ),
           ),
           floatingActionButton: _currentIndex == 0 ? FloatingActionButton.extended(
             onPressed: () => _showAIAnalyst(context),
-            backgroundColor: Colors.indigo[900],
-            icon: const Icon(Icons.auto_awesome, color: Colors.amber),
+            backgroundColor: AppTheme.primaryColor,
+            icon: const Icon(Icons.auto_awesome, color: Colors.white),
             label: Text("Ask AI", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
           ) : null,
         );
@@ -182,19 +213,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (_currentIndex == 1) {
       return AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
+          icon: const Icon(Icons.menu_rounded, color: Colors.white),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
-        title: Text(context.translate('daily_tally'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text(context.translate('daily_tally'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white),
       );
     }
     return AppBar(
       automaticallyImplyLeading: false,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.menu_rounded),
+        icon: const Icon(Icons.menu_rounded, color: Colors.white),
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
       title: InkWell(
@@ -203,18 +236,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
         child: Container(
           height: 40,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Icon(Icons.search_rounded, color: AppTheme.secondaryTextColor.withValues(alpha: 0.5), size: 18),
+              Icon(Icons.search_rounded, color: Colors.white54, size: 18),
               const SizedBox(width: 8),
               Text(
                 context.translate('search_customers_hint'),
-                style: TextStyle(color: AppTheme.secondaryTextColor.withValues(alpha: 0.5), fontSize: 13),
+                style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13),
               ),
             ],
           ),
@@ -222,7 +255,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_none_rounded),
+          icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
           onPressed: _showNotifications,
         ),
         const SizedBox(width: 8),
@@ -236,6 +269,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
       : RefreshIndicator(
           onRefresh: _fetchDashboardData,
+          color: AppTheme.primaryColor,
+          backgroundColor: Colors.white,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -256,11 +291,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         borderRadius: BorderRadius.circular(40),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 30,
                             offset: const Offset(0, 15),
                           ),
                         ],
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(32.0),
@@ -333,9 +369,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     children: [
                       Text(
                         context.translate('quick_actions'),
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
-                      Icon(Icons.more_horiz_rounded, color: AppTheme.secondaryTextColor.withValues(alpha: 0.5)),
+                      Icon(Icons.more_horiz_rounded, color: Colors.white54),
                     ],
                   ),
                 ),
@@ -418,13 +454,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     children: [
                       Text(
                         'Recent Activity',
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       InkWell(
                         onTap: () => Navigator.pushNamed(context, '/admin/audit_logs'),
                         child: Text(
                           'View All',
-                          style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
+                          style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),
                     ],
@@ -432,26 +468,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
                 
                 if (_recentActivity.isEmpty)
-                   const Padding(
-                     padding: EdgeInsets.symmetric(horizontal: 24),
-                     child: Text("No recent activity found."),
+                   Padding(
+                     padding: const EdgeInsets.symmetric(horizontal: 24),
+                     child: Text("No recent activity found.", style: GoogleFonts.outfit(color: Colors.white54)),
                    ),
 
                 ..._recentActivity.take(5).map((log) {
                   final isSuccess = log['status'].toString().toLowerCase().contains('success');
                   final icon = isSuccess ? Icons.check_circle_outline : Icons.info_outline;
-                  final color = isSuccess ? Colors.green : Colors.orange;
+                  final color = isSuccess ? Colors.greenAccent : Colors.orangeAccent;
                   
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12, left: 24, right: 24),
-                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                     ),
                     child: ListTile(
-                      contentPadding: EdgeInsets.zero,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       leading: Container(
                         width: 48,
                         height: 48,
@@ -463,11 +498,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                       title: Text(
                         log['status'] ?? 'Event',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                       ),
                       subtitle: Text(
                         "${log['user_name']} - ${log['device'] ?? 'Unknown Device'}",
-                        style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12),
+                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -477,7 +512,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         children: [
                           Text(
                             _formatTime(log['time']),
-                            style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 10),
+                            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 10),
                           ),
                         ],
                       ),
@@ -512,12 +547,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -529,56 +564,77 @@ class _AdminDashboardState extends State<AdminDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(context.translate('daily_recovery_pulse'), style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+              Text(context.translate('daily_recovery_pulse'), style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1FCE4),
+                  color: Colors.greenAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ScaleTransition(
+                          scale: _pulseAnimation,
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(color: Colors.greenAccent, shape: BoxShape.circle),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    Text("$agents ${context.translate('agents_live')}", style: GoogleFonts.outfit(color: Colors.green[800], fontSize: 11, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    Text("$agents ${context.translate('agents_live')}", style: GoogleFonts.outfit(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          Stack(
-            children: [
-              Container(
-                height: 14,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutBack,
-                height: 14,
-                width: MediaQuery.of(context).size.width * 0.7 * progress, // Approximation
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppTheme.primaryColor, Color(0xFFD4FF8B)]),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  Container(
+                    height: 14,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeOutBack,
+                    height: 14,
+                    width: constraints.maxWidth * progress.clamp(0.0, 1.0),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [AppTheme.primaryColor, Color(0xFFD4FF8B)]),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           Row(
@@ -590,10 +646,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   Text(
                     "₹${NumberFormat('#,##,###').format(collected)} of ₹${NumberFormat('#,##,###').format(total)}",
-                    style: GoogleFonts.outfit(color: const Color(0xFF64748B), fontSize: 14, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
-                  Text(context.translate('collected_today_pulse'), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 1)),
+                  Text(context.translate('collected_today_pulse'), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white38, letterSpacing: 1)),
                 ],
               ),
               Text("${(progress * 100).toStringAsFixed(1)}%", style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontSize: 28, fontWeight: FontWeight.w900)),
@@ -601,7 +657,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           if (leaders.isNotEmpty) ...[
             const SizedBox(height: 32),
-            Text(context.translate('top_performers'), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFF94A3B8), letterSpacing: 1.5)),
+            Text(context.translate('top_performers'), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white38, letterSpacing: 1.5)),
             const SizedBox(height: 16),
             SizedBox(
               height: 44,
@@ -614,9 +670,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                     ),
                     child: Center(
                       child: Row(
@@ -625,7 +681,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           const SizedBox(width: 8),
                           Text(
                             "${leader['name']} • ₹${NumberFormat('#,###').format(leader['amount'])}",
-                            style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 12, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -649,7 +705,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.indigo[900]!, Colors.indigo[700]!],
+          colors: [Colors.indigo.shade900, Colors.indigo.shade800],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -657,6 +713,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         boxShadow: [
           BoxShadow(color: Colors.indigo.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))
         ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,7 +733,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.greenAccent, size: 14),
                 const SizedBox(width: 8),
-                Expanded(child: Text(s, style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4))),
+                Expanded(child: Text(s, style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, height: 1.4))),
               ],
             ),
           )),
@@ -694,36 +751,57 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildProblemLoanCard(Map<String, dynamic> loan) {
+    final riskScore = (loan['risk_score'] ?? 0) as num;
+    final riskColor = riskScore > 80 ? Colors.redAccent : (riskScore > 50 ? Colors.orangeAccent : Colors.amberAccent);
+    
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: riskColor.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.warning_amber_rounded, color: riskColor, size: 20),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(loan['customer_name'] ?? 'Unknown', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                Text(
+                  loan['customer_name'] ?? 'Unknown', 
+                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)
+                ),
                 const SizedBox(height: 2),
-                Text(loan['reason'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                Text(
+                  loan['reason'] ?? 'Anomaly detected', 
+                  style: GoogleFonts.outfit(color: Colors.white60, fontSize: 11)
+                ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: (loan['risk_score'] ?? 0) > 80 ? Colors.redAccent : Colors.orangeAccent,
-              borderRadius: BorderRadius.circular(8)
-            ),
-            child: Text(
-              "RISK: ${loan['risk_score'] ?? 0}",
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)
-            ),
-          )
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                "RISK", 
+                style: GoogleFonts.outfit(color: riskColor, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 1)
+              ),
+              Text(
+                "$riskScore%", 
+                style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -732,13 +810,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildModernActionTile(BuildContext context, String title, IconData icon, String route, {bool isCustom = false, VoidCallback? onTap}) {
     return InkWell(
       onTap: isCustom ? onTap : () => Navigator.pushNamed(context, route).then((_) => _fetchDashboardData()),
+      borderRadius: BorderRadius.circular(32),
       child: Container(
         width: 100,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -746,15 +825,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.backgroundColor,
+                color: Colors.white.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Colors.black54, size: 24),
+              child: Icon(icon, color: Colors.white70, size: 24),
             ),
             const SizedBox(height: 8),
             Text(
               title,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10, color: AppTheme.textColor),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.white),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -779,7 +858,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           return Container(
             height: MediaQuery.of(context).size.height * 0.7,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: Color(0xFF1E293B),
               borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
             ),
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -788,15 +867,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 Container(
                   margin: const EdgeInsets.only(top: 12),
                   width: 40, height: 4,
-                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: Colors.indigo),
+                      const Icon(Icons.auto_awesome, color: AppTheme.primaryColor),
                       const SizedBox(width: 12),
-                      Text("AI Analyst", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text("AI Analyst", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                     ],
                   ),
                 ),
@@ -806,18 +885,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[index];
+                      final isAi = msg['isAi'];
                       return Align(
-                        alignment: msg['isAi'] ? Alignment.centerLeft : Alignment.centerRight,
+                        alignment: isAi ? Alignment.centerLeft : Alignment.centerRight,
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: msg['isAi'] ? Colors.indigo[50] : AppTheme.primaryColor.withValues(alpha: 0.1),
+                            color: isAi ? Colors.white.withValues(alpha: 0.1) : AppTheme.primaryColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: isAi ? Colors.white.withValues(alpha: 0.05) : AppTheme.primaryColor.withValues(alpha: 0.2)),
                           ),
                           child: Text(
                             msg['text'],
-                            style: GoogleFonts.outfit(color: msg['isAi'] ? Colors.indigo[900] : Colors.black87),
+                            style: GoogleFonts.outfit(color: Colors.white),
                           ),
                         ),
                       );
@@ -827,19 +908,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5))]
+                    color: const Color(0xFF1E293B),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, -5))]
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: textController,
+                          style: GoogleFonts.outfit(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: "Type your question...",
+                            hintStyle: GoogleFonts.outfit(color: Colors.white38),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                             filled: true,
-                            fillColor: Colors.grey[100],
+                            fillColor: Colors.black.withValues(alpha: 0.2),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           ),
                           onSubmitted: (v) async {
@@ -885,7 +968,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           }
                         },
                         icon: const Icon(Icons.send_rounded),
-                        style: IconButton.styleFrom(backgroundColor: Colors.indigo[900], foregroundColor: Colors.white),
+                        style: IconButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.white),
                       )
                     ],
                   ),
@@ -1026,7 +1109,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 children: [
                   const Icon(Icons.analytics_rounded, color: Color(0xFFD4FF8B), size: 20),
                   const SizedBox(width: 8),
-                  Text(context.translate('auto_accounting') ?? "Auto-Accounting", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(context.translate('auto_accounting'), style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 ],
               ),
               Text(data['date'] ?? '', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),

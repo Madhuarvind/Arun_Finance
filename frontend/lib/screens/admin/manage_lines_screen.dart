@@ -3,6 +3,7 @@ import '../../services/api_service.dart';
 import '../../utils/localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../utils/theme.dart';
 
 class ManageLinesScreen extends StatefulWidget {
   const ManageLinesScreen({super.key});
@@ -309,137 +310,160 @@ class _ManageLinesScreenState extends State<ManageLinesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context).translate('line_management'),
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           TextButton.icon(
             onPressed: _showBulkReassignDialog,
-            icon: const Icon(Icons.swap_horiz_rounded, color: Colors.blueAccent),
-            label: Text("Bulk Swap", style: GoogleFonts.poppins(color: Colors.blueAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+            icon: const Icon(Icons.swap_horiz_rounded, color: AppTheme.primaryColor),
+            label: Text("Bulk Swap", style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _fetchData,
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _lines.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.route_outlined, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context).translate('no_lines_found'),
-                        style: GoogleFonts.poppins(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _lines.length,
-                  itemBuilder: (context, index) {
-                    final line = _lines[index];
-                    final agentName = _agents.firstWhere(
-                      (a) => a['id'] == line['agent_id'],
-                      orElse: () => {'name': AppLocalizations.of(context).translate('not_assigned')},
-                    )['name'];
+      body: Container(
+        decoration: const BoxDecoration(
+           gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : _lines.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.route_outlined, size: 64, color: Colors.white24),
+                        const SizedBox(height: 16),
+                        Text(
+                          AppLocalizations.of(context).translate('no_lines_found'),
+                          style: GoogleFonts.outfit(color: Colors.white54),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 16),
+                    itemCount: _lines.length,
+                    itemBuilder: (context, index) {
+                      final line = _lines[index];
+                      final agentName = _agents.firstWhere(
+                        (a) => a['id'] == line['agent_id'],
+                        orElse: () => {'name': AppLocalizations.of(context).translate('not_assigned')},
+                      )['name'];
 
-                    return Card(
-                      elevation: 2,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ExpansionTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1), 
-                          child: Icon(Icons.route, color: Theme.of(context).primaryColor),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                         ),
-                        title: Text(
-                          line['name'],
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          '${line['area']} • $agentName',
-                          style: GoogleFonts.poppins(fontSize: 12),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            line['is_locked'] ? Icons.lock : Icons.lock_open,
-                            color: line['is_locked'] ? Colors.red : Colors.green,
-                          ),
-                          onPressed: () => _toggleLock(line),
-                        ),
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: () => _assignAgent(line),
-                                  icon: const Icon(Icons.person_add, size: 16),
-                                  label: Text(
-                                    AppLocalizations.of(context).translate('assign_agent'),
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue.shade50,
-                                    foregroundColor: Colors.blue,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    minimumSize: const Size(140, 36),
-                                  ),
-                                ),
-                                 ElevatedButton.icon(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, '/admin/line_customers', arguments: line);
-                                  },
-                                  icon: const Icon(Icons.people, size: 16),
-                                  label: Text(
-                                    AppLocalizations.of(context).translate('manage_customers'),
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange.shade50,
-                                    foregroundColor: Colors.orange,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    minimumSize: const Size(140, 36),
-                                  ),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: () => _editLineSettings(line),
-                                  icon: const Icon(Icons.settings, size: 16),
-                                  label: const Text(
-                                    "Edit Settings",
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey.shade100,
-                                    foregroundColor: Colors.grey.shade700,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    minimumSize: const Size(140, 36),
-                                  ),
-                                ),
-                              ],
+                        child: Theme(
+                          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            iconColor: Colors.white,
+                            collapsedIconColor: Colors.white54,
+                            leading: CircleAvatar(
+                              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1), 
+                              child: const Icon(Icons.route, color: AppTheme.primaryColor),
                             ),
+                            title: Text(
+                              line['name'],
+                              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            subtitle: Text(
+                              '${line['area']} • $agentName',
+                              style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54),
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(
+                                line['is_locked'] ? Icons.lock : Icons.lock_open,
+                                color: line['is_locked'] ? Colors.redAccent : Colors.greenAccent,
+                              ),
+                              onPressed: () => _toggleLock(line),
+                            ),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: () => _assignAgent(line),
+                                      icon: const Icon(Icons.person_add, size: 16),
+                                      label: Text(
+                                        AppLocalizations.of(context).translate('assign_agent'),
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blueAccent.withValues(alpha: 0.2),
+                                        foregroundColor: Colors.blueAccent,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        minimumSize: const Size(140, 36),
+                                      ),
+                                    ),
+                                     ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.pushNamed(context, '/admin/line_customers', arguments: line);
+                                      },
+                                      icon: const Icon(Icons.people, size: 16),
+                                      label: Text(
+                                        AppLocalizations.of(context).translate('manage_customers'),
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.orangeAccent.withValues(alpha: 0.2),
+                                        foregroundColor: Colors.orangeAccent,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        minimumSize: const Size(140, 36),
+                                      ),
+                                    ),
+                                    ElevatedButton.icon(
+                                      onPressed: () => _editLineSettings(line),
+                                      icon: const Icon(Icons.settings, size: 16),
+                                      label: const Text(
+                                        "Edit Settings",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                                        foregroundColor: Colors.white70,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        minimumSize: const Size(140, 36),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        ),
+                      );
+                    },
+                  ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createNewLine,
-        child: const Icon(Icons.add),
+        backgroundColor: AppTheme.primaryColor,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }

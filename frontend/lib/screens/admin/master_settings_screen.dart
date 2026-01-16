@@ -83,7 +83,6 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
                behavior: SnackBarBehavior.floating,
              )
            );
-           // Removed Navigator.pop to allow the user to see the success state
          } else {
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
@@ -99,12 +98,12 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Global Configuration", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text("Global Configuration", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.save_rounded, color: AppTheme.primaryColor),
@@ -112,84 +111,97 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
           )
         ],
       ),
-      body: _isLoading 
-         ? const Center(child: CircularProgressIndicator())
-         : SingleChildScrollView(
-             padding: const EdgeInsets.all(24),
-             child: Form(
-               key: _formKey,
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   _buildSectionHeader("Default Loan Terms"),
-                   _buildCard([
-                     _buildTextField("Default Interest Rate (%)", _interestRateController, icon: Icons.percent),
-                     _buildTextField("Max Loan Amount (₹)", _maxLoanController, icon: Icons.currency_rupee),
-                   ]),
-                   
-                   const SizedBox(height: 24),
-                   _buildSectionHeader("Penalties & Rules"),
-                   _buildCard([
-                     _buildTextField("Penalty Amount (₹)", _penaltyController, icon: Icons.warning_amber),
-                     _buildTextField("Grace Period (Days)", _gracePeriodController, icon: Icons.calendar_today),
-                   ]),
-                   
-                   const SizedBox(height: 24),
-                   _buildSectionHeader("UPI Payment (Collection)"),
-                   _buildCard([
-                     _buildTextField("Default UPI ID", _upiIdController, icon: Icons.account_balance_wallet_rounded),
-                     _buildTextField("Custom QR Image URL (Optional)", _upiQrUrlController, icon: Icons.image_rounded, isOptional: true),
-                   ]),
-                   
-                   const SizedBox(height: 24),
-                   _buildSectionHeader("Permissions"),
-                   _buildCard([
-                     SwitchListTile(
-                       title: Text("Field Agents Can Edit Customers", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                       subtitle: const Text("Allow workers to modify customer details after creation"),
-                       value: _workerCanEditCustomer,
-                       activeThumbColor: AppTheme.primaryColor,
-                       onChanged: (val) => setState(() => _workerCanEditCustomer = val),
-                     )
-                   ]),
-                   
-                   const SizedBox(height: 24),
-                   _buildSectionHeader("AI Agent Configuration (N8n)"),
-                   _buildCard([
-                     _buildTextField("Error Detection Webhook URL", _errorDetectionUrlController, icon: Icons.webhook_rounded),
-                     const Padding(
-                       padding: EdgeInsets.only(top: 8.0),
-                       child: Text(
-                         "This URL is used by the system to trigger AI validation workflows.",
-                         style: TextStyle(fontSize: 12, color: Colors.grey),
-                       ),
-                     )
-                   ]),
-                   
-                   const SizedBox(height: 32),
-                   SizedBox(
-                     width: double.infinity,
-                     height: 50,
-                     child: ElevatedButton(
-                       style: ElevatedButton.styleFrom(
-                         backgroundColor: AppTheme.primaryColor,
-                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                       ),
-                       onPressed: _saveSettings,
-                       child: Text("Save Configuration", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
-                     ),
-                   )
-                 ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SafeArea(
+          child: _isLoading 
+             ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+             : SingleChildScrollView(
+                 padding: const EdgeInsets.all(24),
+                 child: Form(
+                   key: _formKey,
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       _buildSectionHeader("Default Loan Terms"),
+                       _buildCard([
+                         _buildTextField("Default Interest Rate (%)", _interestRateController, icon: Icons.percent),
+                         _buildTextField("Max Loan Amount (₹)", _maxLoanController, icon: Icons.currency_rupee),
+                       ]),
+                       
+                       const SizedBox(height: 24),
+                       _buildSectionHeader("Penalties & Rules"),
+                       _buildCard([
+                         _buildTextField("Penalty Amount (₹)", _penaltyController, icon: Icons.warning_amber),
+                         _buildTextField("Grace Period (Days)", _gracePeriodController, icon: Icons.calendar_today),
+                       ]),
+                       
+                       const SizedBox(height: 24),
+                       _buildSectionHeader("UPI Payment (Collection)"),
+                       _buildCard([
+                         _buildTextField("Default UPI ID", _upiIdController, icon: Icons.account_balance_wallet_rounded),
+                         _buildTextField("Custom QR Image URL (Optional)", _upiQrUrlController, icon: Icons.image_rounded, isOptional: true),
+                       ]),
+                       
+                       const SizedBox(height: 24),
+                       _buildSectionHeader("Permissions"),
+                       _buildCard([
+                         SwitchListTile(
+                           title: Text("Field Agents Can Edit Customers", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+                           subtitle: Text("Allow workers to modify customer details after creation", style: GoogleFonts.outfit(color: Colors.white54)),
+                           value: _workerCanEditCustomer,
+                           activeThumbColor: AppTheme.primaryColor,
+                           onChanged: (val) => setState(() => _workerCanEditCustomer = val),
+                         )
+                       ]),
+                       
+                       const SizedBox(height: 24),
+                       _buildSectionHeader("AI Agent Configuration (N8n)"),
+                       _buildCard([
+                         _buildTextField("Error Detection Webhook URL", _errorDetectionUrlController, icon: Icons.webhook_rounded),
+                         Padding(
+                           padding: const EdgeInsets.only(top: 8.0),
+                           child: Text(
+                             "This URL is used by the system to trigger AI validation workflows.",
+                             style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54),
+                           ),
+                         )
+                       ]),
+                       
+                       const SizedBox(height: 32),
+                       SizedBox(
+                         width: double.infinity,
+                         height: 50,
+                         child: ElevatedButton(
+                           style: ElevatedButton.styleFrom(
+                             backgroundColor: AppTheme.primaryColor,
+                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                             shadowColor: AppTheme.primaryColor.withValues(alpha: 0.5),
+                             elevation: 8,
+                           ),
+                           onPressed: _saveSettings,
+                           child: Text("Save Configuration", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                         ),
+                       )
+                     ],
+                   ),
+                 ),
                ),
-             ),
-           ),
+        ),
+      ),
     );
   }
 
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 4),
-      child: Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey[700])),
+      child: Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white70)),
     );
   }
 
@@ -197,9 +209,9 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(children: children),
     );
@@ -210,15 +222,19 @@ class _MasterSettingsScreenState extends State<MasterSettingsScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
+        style: GoogleFonts.outfit(color: Colors.white),
         keyboardType: label.toLowerCase().contains("url") || label.toLowerCase().contains("id") 
             ? TextInputType.text 
             : const TextInputType.numberWithOptions(decimal: true),
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: GoogleFonts.outfit(color: Colors.white54),
           prefixIcon: icon != null ? Icon(icon, color: AppTheme.primaryColor) : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: AppTheme.backgroundColor,
+          fillColor: Colors.black.withValues(alpha: 0.2),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppTheme.primaryColor)),
         ),
         validator: (val) {
           if (isOptional) return null;

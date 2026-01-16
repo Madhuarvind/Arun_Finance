@@ -134,12 +134,12 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        title: Text("Issue Loan to ${widget.customerName}", style: GoogleFonts.outfit(color: Colors.black)),
-        backgroundColor: Colors.white,
+        title: Text("Issue Loan to ${widget.customerName}", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white70),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -148,8 +148,8 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
           child: Column(
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
-               Text("Loan Details", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
-               const SizedBox(height: 15),
+               Text("LOAN DETAILS", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, color: AppTheme.primaryColor, letterSpacing: 1.5)),
+               const SizedBox(height: 20),
                _buildField(_amountCtrl, "Loan Amount (₹)", Icons.currency_rupee, type: TextInputType.number, textInputAction: TextInputAction.next),
                const SizedBox(height: 16),
                
@@ -160,10 +160,16 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
                       flex: 3,
                       child: DropdownButtonFormField<String>(
                         initialValue: _interestType,
-                        decoration: const InputDecoration(
+                        style: GoogleFonts.outfit(color: Colors.white),
+                        dropdownColor: const Color(0xFF1E293B),
+                        decoration: InputDecoration(
                           labelText: 'Int. Type', 
+                          labelStyle: const TextStyle(color: Colors.white38),
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15)
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                         ),
                         items: const [
                           DropdownMenuItem(value: 'flat', child: Text('Flat')),
@@ -172,10 +178,10 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
                         onChanged: (v) => setState(() => _interestType = v!),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: _buildField(_interestCtrl, "Rate %", Icons.percent, type: TextInputType.number, textInputAction: TextInputAction.next),
+                      child: _buildField(_interestCtrl, "Rate %", Icons.percent_rounded, type: TextInputType.number, textInputAction: TextInputAction.next),
                     ),
                   ],
                 ),
@@ -186,17 +192,23 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: _buildField(_tenureCtrl, "Tenure", Icons.calendar_today, type: TextInputType.number, textInputAction: TextInputAction.next),
+                      child: _buildField(_tenureCtrl, "Tenure", Icons.calendar_today_rounded, type: TextInputType.number, textInputAction: TextInputAction.next),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
                       flex: 3,
                       child: DropdownButtonFormField<String>(
                         initialValue: _tenureUnit,
-                        decoration: const InputDecoration(
+                        style: GoogleFonts.outfit(color: Colors.white),
+                        dropdownColor: const Color(0xFF1E293B),
+                        decoration: InputDecoration(
                           labelText: 'Unit',
+                          labelStyle: const TextStyle(color: Colors.white38),
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 15)
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.05),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                         ),
                         items: const [
                           DropdownMenuItem(value: 'days', child: Text('Days')),
@@ -209,54 +221,58 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
                   ],
                 ),
                const SizedBox(height: 16),
-               _buildField(_feeCtrl, "Processing Fee (₹)", Icons.settings_suggest, type: TextInputType.number, textInputAction: TextInputAction.next),
+               _buildField(_feeCtrl, "Processing Fee (₹)", Icons.settings_suggest_rounded, type: TextInputType.number, textInputAction: TextInputAction.next),
                
-               const SizedBox(height: 30),
-               const Divider(),
-               const SizedBox(height: 10),
-               Text("Guarantor Details", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blueGrey)),
-               const SizedBox(height: 15),
-               _buildField(_guarantorNameCtrl, "Guarantor Name", Icons.person_outline, textInputAction: TextInputAction.next),
-               const SizedBox(height: 10),
-               _buildField(_guarantorMobileCtrl, "Guarantor Mobile", Icons.phone_android, type: TextInputType.phone, textInputAction: TextInputAction.next),
-               const SizedBox(height: 10),
-               _buildField(_guarantorRelationCtrl, "Relation (e.g., Father)", Icons.people_outline, textInputAction: TextInputAction.done, onFieldSubmitted: (_) => _createLoan()),
-               
-               const SizedBox(height: 40),
-               SizedBox(
-                 width: double.infinity,
-                 height: 55,
-                 child: ElevatedButton(
-                   style: ElevatedButton.styleFrom(
-                     backgroundColor: AppTheme.primaryColor,
-                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                   ),
-                   onPressed: _isLoading ? null : () => _createLoan(),
-                   child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text("CREATE LOAN DRAFT", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                 ),
-               ),
-               const SizedBox(height: 12),
-               SizedBox(
-                 width: double.infinity,
-                 height: 50,
-                 child: OutlinedButton.icon(
-                   style: OutlinedButton.styleFrom(
-                     foregroundColor: Colors.blueGrey,
-                     side: const BorderSide(color: Colors.blueGrey),
-                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                   ),
-                   onPressed: _isLoading ? null : () => _createLoan(offlineOnly: true),
-                   icon: const Icon(Icons.cloud_off),
-                   label: const Text("SAVE AS OFFLINE DRAFT"),
-                 ),
-               ),
+               const SizedBox(height: 32),
+               const Divider(color: Colors.white10),
+               const SizedBox(height: 24),
+               Text("GUARANTOR DETAILS", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white38, letterSpacing: 1.5)),
                const SizedBox(height: 20),
-               Center(child: Text("Draft requires Admin approval", style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey))),
-               const SizedBox(height: 30),
-             ],
-          ),
-        ),
-      ),
+                _buildField(_guarantorNameCtrl, "Guarantor Name", Icons.person_outline_rounded, textInputAction: TextInputAction.next),
+                const SizedBox(height: 12),
+                _buildField(_guarantorMobileCtrl, "Guarantor Mobile", Icons.phone_android_rounded, type: TextInputType.phone, textInputAction: TextInputAction.next),
+                const SizedBox(height: 12),
+                _buildField(_guarantorRelationCtrl, "Relation (e.g., Father)", Icons.people_outline_rounded, textInputAction: TextInputAction.done, onFieldSubmitted: (_) => _createLoan()),
+                
+                 const SizedBox(height: 48),
+                 SizedBox(
+                   width: double.infinity,
+                   height: 60,
+                   child: ElevatedButton(
+                     style: ElevatedButton.styleFrom(
+                       backgroundColor: AppTheme.primaryColor,
+                       foregroundColor: Colors.black,
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                       elevation: 0,
+                     ),
+                     onPressed: _isLoading ? null : () => _createLoan(),
+                     child: _isLoading 
+                       ? const CircularProgressIndicator(color: Colors.black) 
+                       : Text("CREATE LOAN DRAFT", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+                   ),
+                 ),
+                 const SizedBox(height: 16),
+                 SizedBox(
+                   width: double.infinity,
+                   height: 55,
+                   child: OutlinedButton.icon(
+                     style: OutlinedButton.styleFrom(
+                       foregroundColor: Colors.white70,
+                       side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                     ),
+                     onPressed: _isLoading ? null : () => _createLoan(offlineOnly: true),
+                     icon: const Icon(Icons.cloud_off_rounded, size: 20),
+                     label: Text("SAVE AS OFFLINE DRAFT", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                   ),
+                 ),
+                 const SizedBox(height: 24),
+                 Center(child: Text("DRAFT REQUIRES ADMIN APPROVAL", style: GoogleFonts.outfit(fontSize: 10, color: Colors.white24, fontWeight: FontWeight.w900, letterSpacing: 1))),
+                 const SizedBox(height: 40),
+              ],
+           ),
+         ),
+       ),
     );
   }
 
@@ -266,15 +282,17 @@ class _AddLoanScreenState extends State<AddLoanScreen> {
       keyboardType: type,
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,
+      style: GoogleFonts.outfit(color: Colors.white),
       validator: (v) => v!.isEmpty ? "Required" : null,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: Colors.white38),
         prefixIcon: Icon(icon, color: AppTheme.primaryColor, size: 20),
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: Colors.white.withValues(alpha: 0.05),
       ),
     );
   }

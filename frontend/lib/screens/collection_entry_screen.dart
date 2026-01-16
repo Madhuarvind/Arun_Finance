@@ -8,7 +8,6 @@ import '../utils/localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 class CollectionEntryScreen extends StatefulWidget {
   const CollectionEntryScreen({super.key});
@@ -162,10 +161,7 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
           // AI Fraud Alert
           _showFraudWarningDialog(result['fraud_warning'] ?? ["Unknown anomaly detected"]);
         } else if (result['msg']?.contains('success') ?? false) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Collection submitted successfully! Awaiting admin approval.'), backgroundColor: Colors.green),
-          );
-          Navigator.pop(context, true);
+          _showSuccessSheet();
         } else {
            ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: ${result['msg']}'), backgroundColor: Colors.red),
@@ -185,6 +181,63 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
         Navigator.pop(context, true);
       }
     }
+  }
+
+  void _showSuccessSheet() {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: 400,
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E293B), // Dark Slate
+          borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 80),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              "Collection Published!",
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "Awaiting manager verification.\nThe digital passbook has been updated.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54, height: 1.5),
+            ),
+            const SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 48),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close sheet
+                    Navigator.pop(context, true); // Go back to dashboard
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                  child: Text("DONE", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, letterSpacing: 2)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showFraudWarningDialog(List<dynamic> warnings) {
@@ -229,86 +282,211 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(context.translate('collection'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(context.translate('collection'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: _isLoading && _currentStep == 0
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : Stepper(
-              type: StepperType.horizontal,
-              currentStep: _currentStep,
-              onStepContinue: () {
-                if (_currentStep == 0 && _selectedCustomer != null) {
-                  _fetchLoans(_selectedCustomer!['id']);
-                  setState(() => _currentStep++);
-                } else if (_currentStep == 1 && _selectedLoan != null && _amountController.text.isNotEmpty) {
-                  setState(() => _currentStep++);
-                } else if (_currentStep == 2) {
-                  _submit();
-                }
-              },
-              onStepCancel: () {
-                if (_currentStep > 0) {
-
-                  setState(() => _currentStep--);
-
-                }
-              },
-              steps: [
-                Step(
-                  title: const Text('Customer'),
-                  isActive: _currentStep >= 0,
-                  content: _buildCustomerSelection(),
-                ),
-                Step(
-                  title: const Text('Amount'),
-                  isActive: _currentStep >= 1,
-                  content: _buildAmountEntry(),
-                ),
-                Step(
-                  title: const Text('Review'),
-                  isActive: _currentStep >= 2,
-                  content: _buildReview(),
-                ),
-              ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: kToolbarHeight + MediaQuery.of(context).padding.top),
+            // Custom Progress Indicator
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                children: [
+                  _buildStepIndicator(0, 'Customer'),
+                  _buildStepConnector(0),
+                  _buildStepIndicator(1, 'Amount'),
+                  _buildStepConnector(1),
+                  _buildStepIndicator(2, 'Review'),
+                ],
+              ),
             ),
+            Expanded(
+              child: _isLoading && _currentStep == 0
+                  ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: _buildCurrentStepChild(),
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              if (_currentStep > 0)
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => setState(() => _currentStep--),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                    ),
+                                    child: Text('BACK', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white60)),
+                                  ),
+                                ),
+                              if (_currentStep > 0) const SizedBox(width: 16),
+                              Expanded(
+                                flex: 2,
+                                child: ElevatedButton(
+                                  onPressed: (_currentStep == 0 && _selectedCustomer == null) || (_currentStep == 1 && (_selectedLoan == null || _amountController.text.isEmpty))
+                                      ? null 
+                                      : () {
+                                          if (_currentStep == 0) {
+                                            _fetchLoans(_selectedCustomer!['id']);
+                                            setState(() => _currentStep++);
+                                          } else if (_currentStep == 1) {
+                                            setState(() => _currentStep++);
+                                          } else {
+                                            _submit();
+                                          }
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryColor,
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    elevation: 0,
+                                  ),
+                                    child: Text(_currentStep == 2 ? 'SUBMIT' : 'CONTINUE', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  Widget _buildStepIndicator(int step, String label) {
+    bool isActive = _currentStep >= step;
+    bool isCurrent = _currentStep == step;
+    return Column(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: isCurrent ? AppTheme.primaryColor : (isActive ? AppTheme.primaryColor.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.1)),
+            shape: BoxShape.circle,
+            border: Border.all(color: isActive ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.1), width: 2),
+          ),
+          child: Center(
+            child: isActive && !isCurrent 
+              ? const Icon(Icons.check, size: 16, color: AppTheme.primaryColor)
+              : Text('${step + 1}', style: TextStyle(color: isCurrent ? Colors.black : Colors.white24, fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(label.toUpperCase(), style: GoogleFonts.outfit(fontSize: 10, fontWeight: isCurrent ? FontWeight.w900 : FontWeight.normal, color: isCurrent ? Colors.white : Colors.white38, letterSpacing: 0.5)),
+      ],
+    );
+  }
+
+  Widget _buildStepConnector(int step) {
+    bool isActive = _currentStep > step;
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        height: 2,
+        color: isActive ? AppTheme.primaryColor : Colors.grey.withValues(alpha: 0.1),
+      ),
+    );
+  }
+
+  Widget _buildCurrentStepChild() {
+    switch (_currentStep) {
+      case 0: return _buildCustomerSelection();
+      case 1: return _buildAmountEntry();
+      case 2: return _buildReview();
+      default: return const SizedBox.shrink();
+    }
   }
 
   Widget _buildCustomerSelection() {
     return Column(
+      key: const ValueKey(0),
       children: [
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Search customer...',
-            prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
-          onChanged: (val) {
-             // Basic local filter if needed
-          },
+          child: TextField(
+            style: GoogleFonts.outfit(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Search customer...',
+              hintStyle: GoogleFonts.outfit(color: Colors.white24),
+              prefixIcon: const Icon(Icons.search_rounded, color: Colors.white24),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.all(16),
+            ),
+          ),
         ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 300,
+        const SizedBox(height: 24),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 400),
           child: ListView.builder(
+            shrinkWrap: true,
             itemCount: _customers.length,
             itemBuilder: (context, index) {
               final item = _customers[index];
               if (item is! Map) return const SizedBox.shrink();
               final c = item as Map<String, dynamic>;
               final isSelected = _selectedCustomer?['id'] == c['id'];
-              return ListTile(
-                selected: isSelected,
-                selectedTileColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                leading: const CircleAvatar(child: Icon(Icons.person)),
-                title: Text(c['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                subtitle: Text("${c['area'] ?? ''} • ${c['mobile'] ?? ''}"),
+              return GestureDetector(
                 onTap: () => setState(() => _selectedCustomer = c),
-                trailing: isSelected ? const Icon(Icons.check_circle, color: AppTheme.primaryColor) : null,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppTheme.primaryColor.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05), width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.1),
+                        child: Icon(Icons.person_rounded, color: isSelected ? Colors.black : Colors.white38),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(c['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                            Text("${c['area'] ?? ''} • ${c['mobile'] ?? ''}", style: TextStyle(color: Colors.white38, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                      if (isSelected) const Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -319,67 +497,82 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
 
   Widget _buildAmountEntry() {
     return Column(
+      key: const ValueKey(1),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_loans.isEmpty)
-          const Text('No active loans found for this customer', style: TextStyle(color: Colors.red))
-        else
-          DropdownButtonFormField<Map<String, dynamic>>(
-            decoration: InputDecoration(
-              labelText: 'Select Loan',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(12)),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.red),
+                const SizedBox(width: 12),
+                Text('No active loans found', style: GoogleFonts.outfit(color: Colors.red[900], fontWeight: FontWeight.bold)),
+              ],
             ),
-            items: _loans.whereType<Map>().map((l) {
-              final mapLoan = l as Map<String, dynamic>;
-              return DropdownMenuItem(
-                value: mapLoan,
-                child: Text("Loan #${mapLoan['loan_id'] ?? mapLoan['id']} - Bal: ₹${mapLoan['pending'] ?? mapLoan['amount']}"),
-              );
-            }).toList(),
-            onChanged: (val) => setState(() => _selectedLoan = val),
+          )
+        else
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('SELECT ACTIVE LOAN', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1)),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<Map<String, dynamic>>(
+                dropdownColor: const Color(0xFF1E293B),
+                style: GoogleFonts.outfit(color: Colors.white),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+                ),
+                items: _loans.whereType<Map>().map((l) {
+                  final mapLoan = l as Map<String, dynamic>;
+                  return DropdownMenuItem(
+                    value: mapLoan,
+                    child: Text("Loan #${mapLoan['loan_id'] ?? mapLoan['id']} - ₹${mapLoan['pending'] ?? mapLoan['amount']}", style: GoogleFonts.outfit(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (val) => setState(() => _selectedLoan = val),
+              ),
+            ],
           ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
+        const SizedBox(height: 24),
+        Text('COLLECTION AMOUNT', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1)),
+        const SizedBox(height: 12),
         TextField(
           controller: _amountController,
           keyboardType: TextInputType.number,
+          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
           decoration: InputDecoration(
-            labelText: 'Collection Amount',
+            hintText: '0',
+            hintStyle: GoogleFonts.outfit(color: Colors.white24),
             prefixText: '₹ ',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixStyle: GoogleFonts.outfit(color: Colors.white),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.05),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
           ),
         ),
-        const SizedBox(height: 20),
-        const Text('Payment Mode', style: TextStyle(fontWeight: FontWeight.bold)),
-        Column(
+        const SizedBox(height: 32),
+        Row(
           children: [
-            RadioListTile<String>(
-              title: const Text('Cash'),
-              value: 'cash',
-              // ignore: deprecated_member_use
-              groupValue: _paymentMode,
-              // ignore: deprecated_member_use
-              onChanged: (v) => setState(() => _paymentMode = v!),
-              contentPadding: EdgeInsets.zero,
-            ),
-            RadioListTile<String>(
-              title: const Text('UPI'),
-              value: 'upi',
-              // ignore: deprecated_member_use
-              groupValue: _paymentMode,
-              // ignore: deprecated_member_use
-              onChanged: (v) => setState(() => _paymentMode = v!),
-              contentPadding: EdgeInsets.zero,
-            ),
+            Expanded(child: _buildModeTile('cash', Icons.payments_outlined, 'Cash')),
+            const SizedBox(width: 16),
+            Expanded(child: _buildModeTile('upi', Icons.qr_code_2_rounded, 'UPI')),
           ],
         ),
         if (_paymentMode == 'upi') ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.indigo[50],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.indigo.withValues(alpha: 0.1)),
+              gradient: const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E293B)]),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: Colors.indigo.withValues(alpha: 0.2), blurRadius: 20)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,17 +580,18 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(context.translate('pay_to_upi_id'), style: GoogleFonts.outfit(fontSize: 12, color: Colors.indigo[900], fontWeight: FontWeight.bold)),
+                    Text(context.translate('pay_to_upi_id'), style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.bold)),
                     _buildCopyButton(_systemSettings['upi_id'] ?? 'arun.finance@okaxis'),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _systemSettings['upi_id'] ?? 'arun.finance@okaxis',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.indigo[900]),
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.primaryColor),
                 ),
-                const SizedBox(height: 16),
-                Center(
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
                       final amount = double.tryParse(_amountController.text) ?? 0.0;
@@ -414,9 +608,10 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
                     icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
                     label: Text(context.translate('generate_dynamic_qr')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo[900],
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),
                 ),
@@ -428,6 +623,29 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
     );
   }
 
+  Widget _buildModeTile(String mode, IconData icon, String label) {
+    bool isSelected = _paymentMode == mode;
+    return GestureDetector(
+      onTap: () => setState(() => _paymentMode = mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05)),
+          boxShadow: isSelected ? [BoxShadow(color: AppTheme.primaryColor.withValues(alpha: 0.2), blurRadius: 16)] : null,
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : Colors.white38),
+            const SizedBox(height: 8),
+            Text(label, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSelected ? Colors.black : Colors.white38)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCopyButton(String text) {
     return InkWell(
       onTap: () {
@@ -435,76 +653,84 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.translate('upi_id_copied')), behavior: SnackBarBehavior.floating));
       },
       child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-        child: Icon(Icons.copy_rounded, size: 16, color: Colors.indigo[900]),
-      ),
-    );
-  }
-
-  void _showQRCodeDialog(BuildContext context) {
-    final upiId = _systemSettings['upi_id'] ?? 'arun.finance@okaxis';
-    final amount = _amountController.text;
-    final amountStr = amount.isEmpty ? '0' : amount; // Ensure amount is not empty for UPI URL
-    final upiUrl = "upi://pay?pa=$upiId&pn=${Uri.encodeComponent('AK Finserv')}&am=$amountStr&cu=INR";
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Center(child: Text("Scan to Pay", style: GoogleFonts.outfit(fontWeight: FontWeight.bold))),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_systemSettings['upi_qr_url'] != null && _systemSettings['upi_qr_url'].toString().isNotEmpty)
-              Image.network(_systemSettings['upi_qr_url'].toString(), height: 200, errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 50))
-            else
-              SizedBox(
-                height: 200,
-                width: 200,
-                child: QrImageView(
-                  data: upiUrl,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                ),
-              ),
-            const SizedBox(height: 16),
-            Text("₹$amount", style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 8),
-            Text(upiId, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("CLOSE")),
-        ],
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+        child: const Icon(Icons.copy_rounded, size: 16, color: Colors.white70),
       ),
     );
   }
 
   Widget _buildReview() {
     return Column(
+      key: const ValueKey(2),
       children: [
-        _buildReviewRow('Customer', _selectedCustomer?['name'] ?? ''),
-        _buildReviewRow('Loan ID', _selectedLoan?['id'].toString() ?? ''),
-        _buildReviewRow('Amount', '₹ ${_amountController.text}'),
-        _buildReviewRow('Mode', _paymentMode.toUpperCase()),
-        const SizedBox(height: 20),
-        if (_isLoading)
-          const CircularProgressIndicator()
-        else
-          const Text('GPS will be captured upon submission', style: TextStyle(color: Colors.grey, fontSize: 12)),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
+          child: Column(
+            children: [
+              _buildReviewRow('Customer', _selectedCustomer?['name'] ?? '', isTitle: true),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Divider(height: 1, color: Colors.white12),
+              ),
+              _buildReviewRow('Loan Reference', '#${_selectedLoan?['loan_id'] ?? _selectedLoan?['id']}'),
+              _buildReviewRow('Payment Mode', _paymentMode.toUpperCase()),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(16)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('TOTAL AMOUNT', style: GoogleFonts.outfit(color: Colors.white38, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                    Text('₹ ${_amountController.text}', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.primaryColor)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(color: Colors.amber[50], borderRadius: BorderRadius.circular(16)),
+          child: Row(
+            children: [
+              Icon(Icons.location_on_rounded, color: Colors.amber[800], size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'GPS will be captured upon submission for security purposes.',
+                  style: GoogleFonts.outfit(color: Colors.amber[900], fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildReviewRow(String label, String value) {
+  Widget _buildReviewRow(String label, String value, {bool isTitle = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+          Text(label, style: GoogleFonts.outfit(color: Colors.white38, fontWeight: FontWeight.w600, fontSize: 13)),
+          Text(
+            value, 
+            style: GoogleFonts.outfit(
+              fontWeight: isTitle ? FontWeight.w900 : FontWeight.bold, 
+              fontSize: isTitle ? 18 : 14,
+              color: Colors.white,
+            )
+          ),
         ],
       ),
     );

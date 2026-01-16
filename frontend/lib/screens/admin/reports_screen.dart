@@ -166,16 +166,21 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        title: Text("Reports & Analytics", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text("Reports & Analytics", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white70),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Colors.white24,
           indicatorColor: AppTheme.primaryColor,
+          indicatorSize: TabBarIndicatorSize.label,
+          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+          unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
+          isScrollable: true,
           tabs: const [
             Tab(text: "Daily"),
             Tab(text: "Outstanding"),
@@ -204,60 +209,85 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(DateFormat('EEE, dd MMM yyyy').format(_selectedDate), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                DateFormat('EEE, dd MMM yyyy').format(_selectedDate), 
+                style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)
+              ),
               ElevatedButton.icon(
                 onPressed: () async {
-                  final picked = await showDatePicker(context: context, initialDate: _selectedDate, firstDate: DateTime(2020), lastDate: DateTime.now());
+                  final picked = await showDatePicker(
+                    context: context, 
+                    initialDate: _selectedDate, 
+                    firstDate: DateTime(2020), 
+                    lastDate: DateTime.now(),
+                    builder: (context, child) => Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.dark(
+                          primary: AppTheme.primaryColor,
+                          onPrimary: Colors.black,
+                          surface: Color(0xFF1E293B),
+                          onSurface: Colors.white,
+                        ),
+                      ),
+                      child: child!,
+                    ),
+                  );
                   if (picked != null) {
                      setState(() => _selectedDate = picked);
                      _fetchDailyReport();
                   }
                 },
-                icon: const Icon(Icons.calendar_today),
-                label: const Text("Change Date"),
+                icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                label: Text("DATE", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
               )
             ],
           ),
         ),
         if (_dailyData != null && _dailyData!['summary'] != null)
-           Padding(
-             padding: const EdgeInsets.symmetric(horizontal: 16),
-             child: Row(
-               children: [
-                 _buildSummaryCard("Total", "₹${_dailyData!['summary']['total']}", Colors.blue),
-                 const SizedBox(width: 8),
-                 _buildSummaryCard("Cash", "₹${_dailyData!['summary']['cash']}", Colors.green),
-                 const SizedBox(width: 8),
-                 _buildSummaryCard("UPI", "₹${_dailyData!['summary']['upi']}", Colors.purple),
-               ],
-             ),
-             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  _buildSummaryCard("TOTAL", "₹${_dailyData!['summary']['total']}", Colors.blueAccent),
+                  const SizedBox(width: 12),
+                  _buildSummaryCard("CASH", "₹${_dailyData!['summary']['cash']}", Colors.greenAccent),
+                  const SizedBox(width: 12),
+                  _buildSummaryCard("UPI", "₹${_dailyData!['summary']['upi']}", Colors.purpleAccent),
+                ],
+              ),
+            ),
         const SizedBox(height: 20),
         if (_dailyData != null && _dailyData!['summary'] != null)
            SizedBox(
-             height: 200,
+             height: 180,
              child: PieChart(
                PieChartData(
-                 sectionsSpace: 0,
-                 centerSpaceRadius: 40,
+                 sectionsSpace: 4,
+                 centerSpaceRadius: 30,
                  sections: [
                    PieChartSectionData(
-                     color: Colors.green,
+                     color: Colors.greenAccent.withValues(alpha: 0.8),
                      value: (_dailyData!['summary']['cash'] as num).toDouble(),
-                     title: 'Cash',
-                     radius: 50,
-                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                     title: 'CASH',
+                     radius: 40,
+                     titleStyle: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
                    ),
                    PieChartSectionData(
-                     color: Colors.purple,
+                     color: Colors.purpleAccent.withValues(alpha: 0.8),
                      value: (_dailyData!['summary']['upi'] as num).toDouble(),
                      title: 'UPI',
-                     radius: 50,
-                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                     radius: 40,
+                     titleStyle: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
                    ),
                  ],
                ),
@@ -270,14 +300,44 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
             : (_dailyData == null || _dailyData!['report'] == null || (_dailyData!['report'] as List).isEmpty)
                 ? const Center(child: Text("No collections found"))
                 : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     itemCount: (_dailyData!['report'] as List).length,
                     itemBuilder: (ctx, i) {
                       final item = _dailyData!['report'][i];
-                      return ListTile(
-                        leading: CircleAvatar(backgroundColor: Colors.blue.shade50, child: const Icon(Icons.receipt_long, size: 16)),
-                        title: Text("₹${item['amount']} - ${item['customer_name']}"),
-                        subtitle: Text("${item['mode'].toString().toUpperCase()} • By ${item['agent_name']}"),
-                        trailing: Text(DateFormat('hh:mm a').format(DateTime.parse(item['time']).toLocal())),
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        ),
+                        child: ListTile(
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.receipt_long_rounded, size: 20, color: Colors.white54),
+                          ),
+                          title: Text("${item['customer_name']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                          subtitle: Text(
+                            "${item['mode'].toString().toUpperCase()} • By ${item['agent_name']}",
+                            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12),
+                          ),
+                          trailing: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text("₹${item['amount']}", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: AppTheme.primaryColor, fontSize: 16)),
+                              Text(
+                                DateFormat('hh:mm a').format(DateTime.parse(item['time']).toLocal()),
+                                style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -290,20 +350,26 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     return _isLoadingOutstanding 
        ? const Center(child: CircularProgressIndicator())
        : ListView.builder(
+           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
            itemCount: _outstandingList.length,
            itemBuilder: (ctx, i) {
              final item = _outstandingList[i];
-             return Card(
-               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+             return Container(
+               margin: const EdgeInsets.only(bottom: 12),
+               decoration: BoxDecoration(
+                 color: Colors.white.withValues(alpha: 0.05),
+                 borderRadius: BorderRadius.circular(24),
+                 border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+               ),
                child: ListTile(
-                 title: Text(item['customer_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                 subtitle: Text("Loan #${item['loan_id']} • ${item['area']}"),
+                 title: Text(item['customer_name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+                 subtitle: Text("Loan #${item['loan_id']} • ${item['area']}", style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13)),
                  trailing: Column(
                    mainAxisAlignment: MainAxisAlignment.center,
                    crossAxisAlignment: CrossAxisAlignment.end,
                    children: [
-                     Text("Pending", style: TextStyle(fontSize: 10, color: Colors.grey[600])),
-                     Text("₹${item['pending']}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 16)),
+                     Text("PENDING", style: GoogleFonts.outfit(fontSize: 10, color: Colors.white24, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                     Text("₹${item['pending']}", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.redAccent, fontSize: 18)),
                    ],
                  ),
                ),
@@ -316,17 +382,29 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
      return _isLoadingOverdue
        ? const Center(child: CircularProgressIndicator())
        : ListView.builder(
+           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
            itemCount: _overdueList.length,
            itemBuilder: (ctx, i) {
              final item = _overdueList[i];
-             return Card(
-               color: Colors.red.shade50,
-               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+             return Container(
+               margin: const EdgeInsets.only(bottom: 12),
+               decoration: BoxDecoration(
+                 color: Colors.red.withValues(alpha: 0.05),
+                 borderRadius: BorderRadius.circular(24),
+                 border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
+               ),
                child: ListTile(
-                 leading: const Icon(Icons.warning_amber_rounded, color: Colors.red),
-                 title: Text(item['customer_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                 subtitle: Text("${item['missed_emis']} Missed EMIs\nSince ${item['oldest_due_date']}"),
-                 trailing: Text("₹${item['total_overdue']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                 leading: Container(
+                   padding: const EdgeInsets.all(10),
+                   decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), shape: BoxShape.circle),
+                   child: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 24),
+                 ),
+                 title: Text(item['customer_name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                 subtitle: Text(
+                   "${item['missed_emis']} Missed EMIs\nSince ${item['oldest_due_date']}",
+                   style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                 ),
+                 trailing: Text("₹${item['total_overdue']}", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.redAccent)),
                ),
              );
            },
@@ -337,21 +415,37 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
      return _isLoadingAgents
        ? const Center(child: CircularProgressIndicator())
        : ListView.builder(
+           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
            itemCount: _agentList.length,
            itemBuilder: (ctx, i) {
              final item = _agentList[i];
-             return Card(
-               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+             return Container(
+               margin: const EdgeInsets.only(bottom: 12),
+               decoration: BoxDecoration(
+                 color: Colors.white.withValues(alpha: 0.05),
+                 borderRadius: BorderRadius.circular(24),
+                 border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+               ),
                child: ListTile(
-                 leading: CircleAvatar(child: Text(item['name'][0])),
-                 title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                 subtitle: Text("${item['assigned_customers']} Assigned Customers"),
+                 leading: Container(
+                   width: 48,
+                   height: 48,
+                   decoration: BoxDecoration(
+                     color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                     borderRadius: BorderRadius.circular(16),
+                   ),
+                   child: Center(
+                     child: Text(item['name'][0].toUpperCase(), style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 18)),
+                   ),
+                 ),
+                 title: Text(item['name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                 subtitle: Text("${item['assigned_customers']} Assigned Customers", style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13)),
                  trailing: Column(
                    mainAxisAlignment: MainAxisAlignment.center,
                    crossAxisAlignment: CrossAxisAlignment.end,
                    children: [
-                     const Text("Collected", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                     Text("₹${item['collected']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+                     Text("COLLECTED", style: GoogleFonts.outfit(fontSize: 10, color: Colors.white24, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                     Text("₹${item['collected']}", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, color: Colors.greenAccent)),
                    ],
                  ),
                ),
@@ -364,30 +458,41 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [Colors.indigo[900]!, Colors.indigo[600]!]),
-              borderRadius: BorderRadius.circular(24),
+              gradient: const LinearGradient(colors: [Color(0xFF1E293B), Color(0xFF0F172A)]),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome, color: Colors.amber, size: 32),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.auto_awesome_rounded, color: Colors.amber, size: 28),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("AI Reminders", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text("${_remindersList.length} customers due tomorrow", style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                      Text("AI REMINDERS", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1.2)),
+                      Text("${_remindersList.length} DUES TOMORROW", style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
                 ElevatedButton(
                   onPressed: _remindersList.isEmpty ? null : _sendBulkReminders,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: const Text("Blast All", style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber, 
+                    foregroundColor: Colors.black, 
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  child: Text("BLAST ALL", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                 ),
               ],
             ),
@@ -399,23 +504,31 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
             : _remindersList.isEmpty
                 ? const Center(child: Text("No upcoming payments found for tomorrow"))
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     itemCount: _remindersList.length,
                     itemBuilder: (ctx, i) {
                       final item = _remindersList[i];
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                         ),
                         child: ListTile(
                           onTap: () => _launchWhatsApp(item['mobile'] ?? '', item['amount'], item['customer_name']),
-                          leading: CircleAvatar(backgroundColor: Colors.indigo[50], child: Icon(Icons.send_rounded, color: Colors.green, size: 20)),
-                          title: Text(item['customer_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("₹${item['amount']} • ${item['area']}"),
-                          trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                          leading: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(Icons.chat_rounded, color: Colors.greenAccent, size: 24),
+                          ),
+                          title: Text(item['customer_name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                          subtitle: Text("₹${item['amount']} • ${item['area']}", style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
+                          trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white24, size: 20),
                         ),
                       );
                     },
@@ -429,19 +542,30 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
     return _isLoadingLines
         ? const Center(child: CircularProgressIndicator())
         : ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             itemCount: _linesList.length,
             itemBuilder: (ctx, i) {
               final line = _linesList[i];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                ),
                 child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                    child: const Icon(Icons.route, color: AppTheme.primaryColor),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.route_rounded, color: AppTheme.primaryColor, size: 24),
                   ),
-                  title: Text(line['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(line['area'] ?? ''),
-                  trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                  title: Text(line['name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                  subtitle: Text(line['area'] ?? '', style: GoogleFonts.outfit(color: Colors.white38, fontSize: 13)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white24, size: 20),
                   onTap: () {
                     // Navigate to existing Detail Report Screen
                     Navigator.push(
@@ -463,13 +587,17 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
   Widget _buildSummaryCard(String title, String value, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05), 
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
+        ),
         child: Column(
           children: [
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            Text(value, style: TextStyle(color: color, fontWeight: FontWeight.w900, fontSize: 16, overflow: TextOverflow.ellipsis)),
+            Text(title, style: GoogleFonts.outfit(color: color, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5)),
+            const SizedBox(height: 8),
+            Text(value, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
       ),

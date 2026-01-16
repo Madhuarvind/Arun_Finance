@@ -41,26 +41,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(context.translate('my_profile'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(context.translate('my_profile'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white70),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  _buildProfileHeader(),
-                  const SizedBox(height: 32),
-                  _buildQRCard(),
-                  const SizedBox(height: 32),
-                  _buildInfoCard(),
-                ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.only(top: kToolbarHeight + 40, left: 24, right: 24, bottom: 24),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(),
+                    const SizedBox(height: 32),
+                    _buildQRCard(),
+                    const SizedBox(height: 32),
+                    _buildInfoCard(),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -71,20 +81,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(40),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))],
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: const Icon(Icons.person_rounded, size: 50, color: AppTheme.primaryColor),
         ),
         const SizedBox(height: 16),
         Text(
-          _profile?['name'] ?? '',
-          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold),
+          _profile?['name']?.toString().toUpperCase() ?? '',
+          style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
         ),
+        const SizedBox(height: 4),
         Text(
           _profile?['role']?.toString().toUpperCase() ?? '',
-          style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14, letterSpacing: 1.2),
+          style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 2),
         ),
       ],
     );
@@ -92,19 +103,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildQRCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 5))],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
           Text(
-            context.translate('user_qr_identification'),
-            style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: AppTheme.secondaryTextColor),
+            "USER IDENTIFICATION",
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11, color: Colors.white24, letterSpacing: 1.5),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           if (_profile?['qr_token'] != null)
             QrImageView(
               data: _profile!['qr_token'],
@@ -113,19 +124,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               gapless: false,
               eyeStyle: const QrEyeStyle(
                 eyeShape: QrEyeShape.square,
-                color: Colors.black,
+                color: Colors.white,
               ),
               dataModuleStyle: const QrDataModuleStyle(
                 dataModuleShape: QrDataModuleShape.square,
-                color: Colors.black,
+                color: Colors.white,
               ),
             )
           else
             const Icon(Icons.qr_code_rounded, size: 200, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
-            _profile?['qr_token'] ?? 'No Token Available',
-            style: const TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'monospace'),
+            (_profile?['qr_token'] ?? 'No Token Available').toUpperCase(),
+            style: GoogleFonts.outfit(fontSize: 10, color: Colors.white12, fontWeight: FontWeight.bold, letterSpacing: 1),
           ),
         ],
       ),
@@ -135,23 +146,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInfoCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
-          _buildInfoTile(Icons.phone_rounded, context.translate('mobile_number'), _profile?['mobile_number'] ?? ''),
-          const Divider(height: 1),
+          _buildInfoTile(Icons.phone_android_rounded, context.translate('mobile_number'), _profile?['mobile_number'] ?? ''),
+          const Divider(height: 1, color: Colors.white10),
           _buildInfoTile(Icons.map_rounded, context.translate('area'), _profile?['area'] ?? context.translate('not_assigned')),
-          const Divider(height: 1),
+          const Divider(height: 1, color: Colors.white10),
           _buildInfoTile(Icons.history_rounded, 'Last Login', _profile?['last_login']?.toString().substring(0, 10) ?? 'Never'),
-          const Divider(height: 1),
+          const Divider(height: 1, color: Colors.white10),
           _buildInfoTile(
             Icons.fingerprint_rounded, 
             context.translate('biometric_status'), 
             _profile?['has_biometric'] == true ? context.translate('active') : context.translate('inactive'),
-            color: _profile?['has_biometric'] == true ? Colors.green : Colors.grey,
+            color: _profile?['has_biometric'] == true ? Colors.green : Colors.white24,
           ),
         ],
       ),
@@ -161,12 +172,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInfoTile(IconData icon, String label, String value, {Color? color}) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: (color ?? AppTheme.primaryColor).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: (color ?? AppTheme.primaryColor).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
         child: Icon(icon, color: color ?? AppTheme.primaryColor, size: 20),
       ),
-      title: Text(label, style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 13)),
-      subtitle: Text(value, style: GoogleFonts.outfit(color: AppTheme.textColor, fontWeight: FontWeight.bold, fontSize: 16)),
+      title: Text(label.toUpperCase(), style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+      subtitle: Text(value, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
     );
   }
 }

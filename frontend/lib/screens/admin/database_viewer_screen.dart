@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../utils/theme.dart';
 
 class DatabaseViewerScreen extends StatefulWidget {
   const DatabaseViewerScreen({super.key});
@@ -92,90 +93,121 @@ class _DatabaseViewerScreenState extends State<DatabaseViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('Database Viewer', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black)),
-        backgroundColor: Colors.white,
+        title: Text('Database Viewer', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _fetchData,
           )
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
-            child: Row(
-              children: [
-                const Text("Select Table: ", style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedTable,
-                        isExpanded: true,
-                        items: _tables.map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value, style: GoogleFonts.outfit()),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedTable = newValue;
-                            });
-                            _fetchData();
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      body: Container(
+         decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
           ),
-          Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : _data.isEmpty 
-                  ? Center(child: Text("No records found in $_selectedTable"))
-                  : SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          headingRowColor: WidgetStateProperty.all(Colors.grey[200]),
-                          columns: _columns.map((col) => DataColumn(
-                            label: Text(
-                              col.toUpperCase().replaceAll('_', ' '), 
-                              style: const TextStyle(fontWeight: FontWeight.bold)
-                            )
-                          )).toList(),
-                          rows: _data.map((row) {
-                            return DataRow(
-                              cells: _columns.map((col) {
-                                var val = row[col] ?? '-';
-                                return DataCell(Text(val.toString()));
-                              }).toList(),
-                            );
-                          }).toList(),
+        ),
+        padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 16),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              ),
+              child: Row(
+                children: [
+                   const Text("Select Table: ", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                   const SizedBox(width: 16),
+                   Expanded(
+                     child: Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 12),
+                       decoration: BoxDecoration(
+                         borderRadius: BorderRadius.circular(8),
+                         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                         color: Colors.white.withValues(alpha: 0.05),
+                       ),
+                       child: DropdownButtonHideUnderline(
+                         child: DropdownButton<String>(
+                           value: _selectedTable,
+                           isExpanded: true,
+                           dropdownColor: const Color(0xFF1E293B),
+                           style: GoogleFonts.outfit(color: Colors.white),
+                           items: _tables.map((String value) {
+                             return DropdownMenuItem<String>(
+                               value: value,
+                               child: Text(value, style: GoogleFonts.outfit(color: Colors.white)),
+                             );
+                           }).toList(),
+                           onChanged: (newValue) {
+                             if (newValue != null) {
+                               setState(() {
+                                 _selectedTable = newValue;
+                               });
+                               _fetchData();
+                             }
+                           },
+                         ),
+                       ),
+                     ),
+                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+                : _data.isEmpty 
+                    ? Center(child: Text("No records found in $_selectedTable", style: const TextStyle(color: Colors.white54)))
+                    : Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          padding: const EdgeInsets.all(16),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Theme(
+                              data: Theme.of(context).copyWith(dividerColor: Colors.white.withValues(alpha: 0.1)),
+                              child: DataTable(
+                                headingRowColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.1)),
+                                dataRowColor: WidgetStateProperty.all(Colors.transparent),
+                                columns: _columns.map((col) => DataColumn(
+                                  label: Text(
+                                    col.toUpperCase().replaceAll('_', ' '), 
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.primaryColor),
+                                  )
+                                )).toList(),
+                                rows: _data.map((row) {
+                                  return DataRow(
+                                    cells: _columns.map((col) {
+                                      var val = row[col] ?? '-';
+                                      return DataCell(Text(val.toString(), style: const TextStyle(color: Colors.white70)));
+                                    }).toList(),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

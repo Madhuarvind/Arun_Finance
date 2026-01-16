@@ -82,10 +82,10 @@ class _FaceCaptureWidgetState extends State<FaceCaptureWidget> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0.0, -0.6),
-          radius: 1.2,
-          colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
         ),
       ),
       child: SafeArea(
@@ -125,7 +125,7 @@ class _FaceCaptureWidgetState extends State<FaceCaptureWidget> {
                     width: 300,
                     height: 380,
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
+                      color: Colors.black,
                       borderRadius: BorderRadius.circular(200),
                       border: Border.all(
                         color: AppTheme.primaryColor,
@@ -199,6 +199,7 @@ class _FaceCaptureWidgetState extends State<FaceCaptureWidget> {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: _isProcessing
                       ? const CircularProgressIndicator(color: Colors.black)

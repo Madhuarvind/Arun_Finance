@@ -53,41 +53,52 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           context.translate('risk_predictions'),
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : RefreshIndicator(
-              onRefresh: _fetchData,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTopInsightCard(),
-                    const SizedBox(height: 24),
-                    _buildRiskDistributionSection(),
-                    const SizedBox(height: 32),
-                    _buildSectionTitle('AI Strategic Summaries'),
-                    _buildAiSummariesList(),
-                    const SizedBox(height: 32),
-                    _buildSectionTitle('Priority Collection (High Risk)'),
-                    _buildProblemLoansList(),
-                  ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : RefreshIndicator(
+                onRefresh: _fetchData,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(top: 100, left: 24, right: 24, bottom: 80),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTopInsightCard(),
+                      const SizedBox(height: 24),
+                      _buildRiskDistributionSection(),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle('AI Strategic Summaries'),
+                      _buildAiSummariesList(),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle('Priority Collection (High Risk)'),
+                      _buildProblemLoansList(),
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -158,9 +169,9 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -190,7 +201,7 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
           const SizedBox(height: 16),
           Text(
             "Total Active Portfolio: $total Loans",
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
         ],
       ),
@@ -200,13 +211,13 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
   Widget _buildStatIndicator(String label, int count, Color color) {
     return Column(
       children: [
-        Text(count.toString(), style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(count.toString(), style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 4),
         Row(
           children: [
             Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 6),
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
           ],
         ),
       ],
@@ -224,19 +235,19 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.indigo.withValues(alpha: 0.05),
+          color: Colors.indigoAccent.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.indigo.withValues(alpha: 0.1)),
+          border: Border.all(color: Colors.indigoAccent.withValues(alpha: 0.2)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.auto_awesome, color: Colors.indigo, size: 20),
+            const Icon(Icons.auto_awesome, color: Colors.indigoAccent, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 s,
-                style: const TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w500),
+                style: GoogleFonts.outfit(fontSize: 14, height: 1.4, fontWeight: FontWeight.w500, color: Colors.white),
               ),
             ),
           ],
@@ -256,14 +267,14 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
+              backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
               child: const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
             ),
             const SizedBox(width: 16),
@@ -271,16 +282,16 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l['customer'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text("Loan ID: ${l['loan_id']}", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(l['customer'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text("Loan ID: ${l['loan_id']}", style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text("₹ ${l['pending']}", style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                Text("${l['missed']} Missed", style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                Text("₹ ${l['pending']}", style: GoogleFonts.outfit(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                Text("${l['missed']} Missed", style: GoogleFonts.outfit(color: Colors.white54, fontSize: 11)),
               ],
             ),
           ],
@@ -294,7 +305,7 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         title,
-        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }
@@ -304,15 +315,15 @@ class _RiskPredictionScreenState extends State<RiskPredictionScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
-          Icon(Icons.check_circle_outline_rounded, color: Colors.green.withValues(alpha: 0.2), size: 48),
+          Icon(Icons.check_circle_outline_rounded, color: Colors.greenAccent.withValues(alpha: 0.2), size: 48),
           const SizedBox(height: 16),
-          Text(msg, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Text(msg, style: const TextStyle(color: Colors.white54, fontSize: 14)),
         ],
       ),
     );

@@ -38,33 +38,73 @@ class _PublicPassbookScreenState extends State<PublicPassbookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Digital Passbook", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black)),
-        backgroundColor: Colors.white,
+        title: Text("Digital Passbook", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : _passbook == null
-          ? _buildErrorView()
-          : _buildPassbookView(),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SafeArea(
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : _passbook == null
+              ? _buildErrorView()
+              : _buildPassbookView(),
+        ),
+      ),
     );
   }
 
   Widget _buildErrorView() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline_rounded, size: 60, color: Colors.red),
-          const SizedBox(height: 16),
-          Text("Passbook Link Invalid", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
-          const Text("The link might be expired or incorrect."),
-          const SizedBox(height: 24),
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text("CLOSE")),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.error_outline_rounded, size: 60, color: Colors.redAccent),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "Passbook Link Invalid", 
+              style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "The link might be expired or incorrect.",
+              style: GoogleFonts.outfit(color: Colors.white54, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () => Navigator.pop(context), 
+              child: const Text("CLOSE")
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -94,21 +134,37 @@ class _PublicPassbookScreenState extends State<PublicPassbookScreen> {
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
                       child: const Icon(Icons.person, color: Colors.white),
                     ),
-                    Text(
-                      DateFormat('dd MMM yyyy').format(DateTime.now()),
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        DateFormat('dd MMM yyyy').format(DateTime.now()),
+                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text(_passbook!['customer_name'] ?? 'Customer', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                Text(_passbook!['customer_id'] ?? 'ID: Unknown', style: const TextStyle(color: Colors.white70)),
+                const SizedBox(height: 20),
+                Text(
+                  _passbook!['customer_name'] ?? 'Customer', 
+                  style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)
+                ),
+                Text(
+                  _passbook!['customer_id'] ?? 'ID: Unknown', 
+                  style: GoogleFonts.outfit(color: Colors.black54, fontSize: 14)
+                ),
               ],
             ),
           ),
           
           const SizedBox(height: 32),
-          Text("ACTIVE LOAN SUMMARY", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey[600], fontSize: 12)),
+          Text(
+            "ACTIVE LOAN SUMMARY", 
+            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.white54, fontSize: 12)
+          ),
           const SizedBox(height: 16),
           
           if (loan == null)
@@ -120,7 +176,7 @@ class _PublicPassbookScreenState extends State<PublicPassbookScreen> {
           Center(
             child: Text(
               "Powered by AK Finserv Digital Systems",
-              style: TextStyle(color: Colors.grey[400], fontSize: 11),
+              style: GoogleFonts.outfit(color: Colors.white24, fontSize: 12),
             ),
           ),
         ],
@@ -132,12 +188,20 @@ class _PublicPassbookScreenState extends State<PublicPassbookScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.grey[200]!)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
       child: Column(
         children: [
-          Icon(Icons.info_outline_rounded, color: Colors.grey[300], size: 48),
+          Icon(Icons.info_outline_rounded, color: Colors.white24, size: 48),
           const SizedBox(height: 16),
-          const Text("No active loans found for this profile.", textAlign: TextAlign.center),
+          Text(
+            "No active loans found for this profile.", 
+            textAlign: TextAlign.center,
+            style: GoogleFonts.outfit(color: Colors.white70, fontSize: 16),
+          ),
         ],
       ),
     );
@@ -145,38 +209,38 @@ class _PublicPassbookScreenState extends State<PublicPassbookScreen> {
 
   Widget _buildLoanCard(Map<String, dynamic> loan) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Column(
         children: [
           _buildDetailRow("Loan ID", loan['loan_id'] ?? 'N/A'),
-          const Divider(height: 32),
-          _buildDetailRow("Loan Amount", "₹${loan['principal']}", isBold: true),
-          const SizedBox(height: 12),
-          _buildDetailRow("Pending Balance", "₹${loan['pending']}", valueColor: Colors.red, isBold: true),
-          const SizedBox(height: 12),
+          const Divider(height: 32, color: Colors.white10),
+          _buildDetailRow("Loan Amount", "₹${loan['principal']}", isBold: true, valueColor: Colors.white),
+          const SizedBox(height: 16),
+          _buildDetailRow("Pending Balance", "₹${loan['pending']}", valueColor: Colors.redAccent, isBold: true, valueSize: 20),
+          const SizedBox(height: 16),
           _buildDetailRow("Tenure", loan['tenure'] ?? 'N/A'),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {bool isBold = false, Color? valueColor}) {
+  Widget _buildDetailRow(String label, String value, {bool isBold = false, Color? valueColor, double valueSize = 16}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+        Text(label, style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14)),
         Text(
           value, 
           style: GoogleFonts.outfit(
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            fontSize: 16,
-            color: valueColor ?? Colors.black
+            fontSize: valueSize,
+            color: valueColor ?? Colors.white70
           )
         ),
       ],

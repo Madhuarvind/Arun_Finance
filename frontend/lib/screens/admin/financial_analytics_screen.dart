@@ -43,61 +43,77 @@ class _FinancialAnalyticsScreenState extends State<FinancialAnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(context.translate('financial_analytics'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(context.translate('financial_analytics'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white70),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : RefreshIndicator(
-              onRefresh: _fetchStats,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSummaryCards(),
-                    const SizedBox(height: 32),
-                    _buildSectionTitle('Collection by Payment Mode'),
-                    _buildModeDistributionChart(),
-                    const SizedBox(height: 32),
-                    _buildSectionTitle('Top Performing Agents'),
-                    _buildAgentPerformanceList(),
-                  ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SafeArea(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+              : RefreshIndicator(
+                  onRefresh: _fetchStats,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSummaryCards(),
+                        const SizedBox(height: 32),
+                        _buildSectionTitle('Collection by Payment Mode'),
+                        _buildModeDistributionChart(),
+                        const SizedBox(height: 32),
+                        _buildSectionTitle('Top Performing Agents'),
+                        _buildAgentPerformanceList(),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
+        ),
+      ),
     );
   }
 
   Widget _buildSummaryCards() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Total Approved', '₹ ${_stats?['total_approved'] ?? 0}', Icons.account_balance_wallet_rounded, Colors.blue)),
+        Expanded(child: _buildStatCard('TOTAL APPROVED', '₹ ${_stats?['total_approved'] ?? 0}', Icons.account_balance_wallet_rounded, Colors.blueAccent)),
         const SizedBox(width: 16),
-        Expanded(child: _buildStatCard('Today\'s Total', '₹ ${_stats?['today_total'] ?? 0}', Icons.today_rounded, Colors.green)),
+        Expanded(child: _buildStatCard('TODAY TOTAL', '₹ ${_stats?['today_total'] ?? 0}', Icons.today_rounded, Colors.greenAccent)),
       ],
     );
   }
 
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 24),
+          ),
           const SizedBox(height: 16),
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          Text(label, style: GoogleFonts.outfit(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
           const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
         ],
       ),
     );
@@ -105,8 +121,8 @@ class _FinancialAnalyticsScreenState extends State<FinancialAnalyticsScreen> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textColor)),
+      padding: const EdgeInsets.only(bottom: 16, left: 4),
+      child: Text(title.toUpperCase(), style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white24, letterSpacing: 1.5)),
     );
   }
 
@@ -119,22 +135,27 @@ class _FinancialAnalyticsScreenState extends State<FinancialAnalyticsScreen> {
     }
 
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+      height: 220,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05), 
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
       child: PieChart(
         PieChartData(
+          sectionsSpace: 4,
+          centerSpaceRadius: 40,
           sections: modeData.entries.map((e) {
-            final color = e.key == 'cash' ? Colors.orange : Colors.indigo;
+            final color = e.key.toLowerCase() == 'cash' ? Colors.orangeAccent : Colors.indigoAccent;
             return PieChartSectionData(
-              color: color,
+              color: color.withValues(alpha: 0.8),
               value: (e.value as num).toDouble(),
               title: '${e.key.toUpperCase()}\n₹${e.value}',
-              radius: 60,
-              titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+              radius: 50,
+              titleStyle: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
             );
           }).toList(),
-          centerSpaceRadius: 40,
         ),
       ),
     );
@@ -144,9 +165,13 @@ class _FinancialAnalyticsScreenState extends State<FinancialAnalyticsScreen> {
     final agents = List<dynamic>.from(_stats?['agent_performance'] ?? []);
     if (agents.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-        child: const Center(child: Text('No agent data available')),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05), 
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: Center(child: Text('NO AGENT DATA AVAILABLE', style: GoogleFonts.outfit(color: Colors.white24, fontWeight: FontWeight.w900, fontSize: 12))),
       );
     }
 
@@ -154,14 +179,28 @@ class _FinancialAnalyticsScreenState extends State<FinancialAnalyticsScreen> {
       children: agents.map((a) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05), 
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
           child: Row(
             children: [
-              CircleAvatar(backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1), child: const Icon(Icons.person, color: AppTheme.primaryColor)),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(a['name'][0].toUpperCase(), style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 18)),
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: Text(a['name'], style: const TextStyle(fontWeight: FontWeight.bold))),
-              Text('₹ ${a['total']}', style: GoogleFonts.outfit(color: Colors.green, fontWeight: FontWeight.bold)),
+              Expanded(child: Text(a['name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16))),
+              Text('₹ ${a['total']}', style: GoogleFonts.outfit(color: Colors.greenAccent, fontWeight: FontWeight.w900, fontSize: 18)),
             ],
           ),
         );

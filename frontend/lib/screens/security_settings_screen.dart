@@ -93,145 +93,165 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
         ),
-        title: Text(
-          context.translate('security_hub'),
-          style: GoogleFonts.outfit(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildAppBar(context),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.translate('authentication'),
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.translate('manage_access'),
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          color: Colors.white54,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Biometric Toggle Card
+                      _buildToggleCard(
+                        context.translate('biometric_login'),
+                        context.translate('biometric_login_desc'),
+                        Icons.fingerprint,
+                        _biometricsEnabled,
+                        (val) => _toggleBiometrics(val),
+                        Colors.blue.withValues(alpha: 0.2),
+                        Colors.blueAccent,
+                      ),
+                      
+                      const SizedBox(height: 16),
+
+                      _buildActionCard(
+                        context.translate('enroll_face_title'),
+                        context.translate('enroll_face_desc'),
+                        Icons.face_retouching_natural_rounded,
+                        Colors.amber.withValues(alpha: 0.2),
+                        Colors.amberAccent,
+                        () => Navigator.pushNamed(context, '/enroll_face').then((val) {
+                           if (val == true) _loadSettings();
+                        })
+                      ),
+                      
+                      const SizedBox(height: 32),
+
+                      Text(
+                        context.translate('field_operations'),
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                         context.translate('field_ops_desc'),
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          color: Colors.white54,
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      _buildToggleCard(
+                        context.translate('status'),
+                        context.translate('duty_status_desc'),
+                        Icons.location_on_rounded,
+                        _trackingEnabled,
+                        (val) => _toggleTracking(val),
+                        Colors.green.withValues(alpha: 0.2),
+                        Colors.greenAccent,
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      Text(
+                        context.translate('account_protection'),
+                        style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.translate('security_layers'),
+                        style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          color: Colors.white54,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Device Management Card
+                      _buildActionCard(
+                        context.translate('reset_pin'),
+                        context.translate('change_pin_desc'),
+                        Icons.password_rounded,
+                        Colors.purple.withValues(alpha: 0.2),
+                        Colors.purpleAccent,
+                        () => _showChangePinDialog(context)
+                      ),
+                      const SizedBox(height: 16),
+                      _buildActionCard(
+                        context.translate('device_monitoring'),
+                        "2 ${context.translate('device_mgmt_desc')}",
+                        Icons.devices,
+                        Colors.teal.withValues(alpha: 0.2),
+                        Colors.tealAccent,
+                        () => _showDeviceManagement(context)
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.translate('authentication'),
-              style: GoogleFonts.outfit(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.translate('manage_access'),
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: const Color(0xFF94A3B8),
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Biometric Toggle Card
-            _buildToggleCard(
-              context.translate('biometric_login'),
-              context.translate('biometric_login_desc'),
-              Icons.fingerprint,
-              _biometricsEnabled,
-              (val) => _toggleBiometrics(val),
-              const Color(0xFFEFF6FF),
-              const Color(0xFF3B82F6),
-            ),
-            
-            const SizedBox(height: 16),
+    );
+  }
 
-            _buildActionCard(
-              context.translate('enroll_face_title'),
-              context.translate('enroll_face_desc'),
-              Icons.face_retouching_natural_rounded,
-              const Color(0xFFFEF3C7),
-              const Color(0xFFD97706),
-              () => Navigator.pushNamed(context, '/enroll_face').then((val) {
-                 if (val == true) _loadSettings();
-              })
+  Widget _buildAppBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            context.translate('security_hub'),
+            style: GoogleFonts.outfit(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
             ),
-            
-            const SizedBox(height: 32),
-            
-            const SizedBox(height: 32),
-
-            Text(
-              context.translate('field_operations'),
-              style: GoogleFonts.outfit(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-               context.translate('field_ops_desc'),
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: const Color(0xFF94A3B8),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            _buildToggleCard(
-              context.translate('status'),
-              context.translate('duty_status_desc'),
-              Icons.location_on_rounded,
-              _trackingEnabled,
-              (val) => _toggleTracking(val),
-              const Color(0xFFF1FCE4),
-              const Color(0xFF10B981),
-            ),
-            
-            const SizedBox(height: 32),
-            
-            Text(
-              context.translate('account_protection'),
-              style: GoogleFonts.outfit(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.translate('security_layers'),
-              style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: const Color(0xFF94A3B8),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-
-            
-            // Device Management Card
-            _buildActionCard(
-              context.translate('reset_pin'),
-              context.translate('change_pin_desc'),
-              Icons.password_rounded,
-              const Color(0xFFF5F3FF),
-              const Color(0xFF8B5CF6),
-              () => _showChangePinDialog(context)
-            ),
-            const SizedBox(height: 16),
-            _buildActionCard(
-              context.translate('device_monitoring'),
-              "2 ${context.translate('device_mgmt_desc')}",
-              Icons.devices,
-              const Color(0xFFECFDF5),
-              const Color(0xFF10B981),
-              () => _showDeviceManagement(context)
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -244,35 +264,22 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Change PIN", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF1E293B),
+        title: Text("Change PIN", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: oldPinCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Old PIN", border: OutlineInputBorder()),
-              keyboardType: TextInputType.number,
-            ),
+            _buildDialogTextField(oldPinCtrl, "Old PIN"),
             const SizedBox(height: 12),
-            TextField(
-              controller: newPinCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "New PIN", border: OutlineInputBorder()),
-              keyboardType: TextInputType.number,
-            ),
+            _buildDialogTextField(newPinCtrl, "New PIN"),
             const SizedBox(height: 12),
-            TextField(
-              controller: confirmPinCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: "Confirm PIN", border: OutlineInputBorder()),
-              keyboardType: TextInputType.number,
-            ),
+            _buildDialogTextField(confirmPinCtrl, "Confirm PIN"),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCEL")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCEL", style: TextStyle(color: Colors.white54))),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.black),
             onPressed: () async {
               if (newPinCtrl.text != confirmPinCtrl.text) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("PINs do not match")));
@@ -289,9 +296,25 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     );
   }
 
+  Widget _buildDialogTextField(TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      obscureText: true,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white54),
+        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: AppTheme.primaryColor)),
+      ),
+      keyboardType: TextInputType.number,
+    );
+  }
+
   void _showDeviceManagement(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFF1E293B),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
@@ -299,7 +322,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Active Sessions", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text("Active Sessions", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 16),
             _buildDeviceTile("This Device", "Windows 11 • Online", Icons.laptop_windows, true),
             _buildDeviceTile("Mobile Device", "Android 13 • Last active: 2h ago", Icons.smartphone, false),
@@ -307,7 +330,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red[50], foregroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.withValues(alpha: 0.2), foregroundColor: Colors.redAccent),
                 onPressed: () => Navigator.pop(context),
                 child: const Text("Logout from all devices"),
               ),
@@ -320,10 +343,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
   Widget _buildDeviceTile(String title, String subtitle, IconData icon, bool isCurrent) {
     return ListTile(
-      leading: Icon(icon, color: isCurrent ? Colors.green : Colors.grey),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(subtitle),
-      trailing: isCurrent ? const Chip(label: Text("Current", style: TextStyle(fontSize: 10)), backgroundColor: Color(0xFFF1FCE4)) : null,
+      leading: Icon(icon, color: isCurrent ? AppTheme.primaryColor : Colors.white54),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54)),
+      trailing: isCurrent ? Chip(label: const Text("Current", style: TextStyle(fontSize: 10, color: Colors.black)), backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.8)) : null,
     );
   }
 
@@ -339,9 +362,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black, width: 2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
@@ -360,11 +383,11 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 Text(
                   subtitle,
-                  style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF64748B)),
+                  style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54),
                 ),
               ],
             ),
@@ -372,8 +395,10 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            thumbColor: WidgetStateProperty.all(const Color(0xFFB4F23E)),
-            activeTrackColor: const Color(0xFFB4F23E).withValues(alpha: 0.5),
+            thumbColor: WidgetStateProperty.all(AppTheme.primaryColor),
+            activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.3),
+            inactiveThumbColor: Colors.grey,
+            inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
           ),
         ],
       ),
@@ -394,9 +419,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
@@ -415,16 +440,16 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.outfit(fontSize: 12, color: Colors.white54),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.black, size: 20),
+            const Icon(Icons.chevron_right, color: Colors.white54, size: 20),
           ],
         ),
       ),

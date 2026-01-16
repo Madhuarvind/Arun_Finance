@@ -117,7 +117,13 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
       builder: (context, languageProvider, child) {
         return Scaffold(
           body: Container(
-            color: AppTheme.backgroundColor,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
             child: SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
@@ -128,112 +134,159 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'AK Finserv',
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                          ),
+                          child: Text(
+                            'AK Finserv',
+                            style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.settings_outlined, color: AppTheme.secondaryTextColor),
-                              onPressed: () => Navigator.pushNamed(context, '/settings'),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.admin_panel_settings_outlined, color: AppTheme.secondaryTextColor),
-                              onPressed: () => Navigator.pushNamed(context, '/admin/login'),
-                            ),
+                            _buildCircleAction(context, Icons.settings_outlined, '/settings'),
+                            const SizedBox(width: 8),
+                            _buildCircleAction(context, Icons.admin_panel_settings_outlined, '/admin/login'),
                           ],
                         ),
                       ],
                     ),
-                    const SizedBox(height: 60),
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                           BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)
-                        ]
+                    const SizedBox(height: 80),
+                    Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.5)],
+                              ),
+                              boxShadow: [
+                                 BoxShadow(color: AppTheme.primaryColor.withValues(alpha: 0.2), blurRadius: 20, spreadRadius: 5)
+                              ]
+                            ),
+                            child: CircleAvatar(
+                              radius: 54,
+                              backgroundColor: Colors.white,
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                backgroundImage: const AssetImage('assets/logo.png'),
+                                onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.account_balance_rounded, color: AppTheme.primaryColor, size: 40),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          Text(
+                            context.translate('worker_login'),
+                            style: GoogleFonts.outfit(
+                              fontSize: 42,
+                              fontWeight: FontWeight.w900,
+                              height: 1.1,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.translate('worker_auth_subtitle'),
+                            style: GoogleFonts.outfit(
+                              color: Colors.white38, 
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage: const AssetImage('assets/logo.png'),
-                        onBackgroundImageError: (_, __) => const Icon(Icons.error),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      context.translate('worker_login'),
-                      style: GoogleFonts.outfit(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                        color: AppTheme.textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.translate('worker_auth_subtitle'),
-                      style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 16),
                     ),
                     const SizedBox(height: 48),
-                    TextField(
-                      controller: _nameController,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                      decoration: InputDecoration(
-                        labelText: context.translate('worker_name'),
-                        prefixIcon: const Icon(Icons.person_outline_rounded),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _pinController,
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _handleLogin(),
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 8, color: AppTheme.textColor),
-                      decoration: InputDecoration(
-                        labelText: context.translate('pin'),
-                        prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      ),
-                    ),
-                    if (_biometricsEnabled) ...[
-                      const SizedBox(height: 16),
-                      Center(
-                        child: TextButton.icon(
-                          onPressed: _handleBiometricLogin,
-                          icon: const Icon(Icons.face_unlock_rounded, color: AppTheme.primaryColor),
-                          label: Text(
-                            "Login with Face",
-                            style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _nameController,
+                            textInputAction: TextInputAction.next,
+                            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: context.translate('worker_name'),
+                              labelStyle: const TextStyle(color: Colors.white38),
+                              prefixIcon: const Icon(Icons.person_outline_rounded, color: Colors.white38),
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.05),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _pinController,
+                            obscureText: true,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _handleLogin(),
+                            keyboardType: TextInputType.number,
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 12, color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: context.translate('pin'),
+                              labelStyle: const TextStyle(color: Colors.white38),
+                              prefixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.white38),
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.05),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+                            ),
+                          ),
+                          if (_biometricsEnabled) ...[
+                            const SizedBox(height: 24),
+                            TextButton.icon(
+                              onPressed: _handleBiometricLogin,
+                              icon: const Icon(Icons.face_unlock_rounded, color: AppTheme.primaryColor),
+                              label: Text(
+                                "Quick Login with Face",
+                                style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
+                    ),
                     if (_isLoading) ...[
                       const SizedBox(height: 32),
                       const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
                     ],
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          padding: const EdgeInsets.symmetric(vertical: 22),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 10,
+                          shadowColor: AppTheme.primaryColor.withValues(alpha: 0.3),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(context.translate('login'), style: const TextStyle(fontSize: 20, color: Colors.black)),
-                            const SizedBox(width: 8),
+                            Text(
+                              context.translate('login').toUpperCase(), 
+                              style: GoogleFonts.outfit(fontSize: 18, color: Colors.black, fontWeight: FontWeight.w900, letterSpacing: 1)
+                            ),
+                            const SizedBox(width: 12),
                             const Icon(Icons.arrow_forward_rounded, size: 24, color: Colors.black),
                           ],
                         ),
@@ -253,6 +306,20 @@ class _WorkerLoginScreenState extends State<WorkerLoginScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCircleAction(BuildContext context, IconData icon, String route) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white70, size: 20),
+        onPressed: () => Navigator.pushNamed(context, route),
+      ),
     );
   }
 }

@@ -43,20 +43,24 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: const Color(0xFF0F172A),
         appBar: AppBar(
-          title: Text("Loan Approvals", style: GoogleFonts.outfit(color: Colors.black)),
-          backgroundColor: Colors.white,
+          title: Text("Loan Approvals", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppTheme.primaryColor,
-            unselectedLabelColor: Colors.grey,
-            tabs: [
+            unselectedLabelColor: Colors.white24,
+            indicatorColor: AppTheme.primaryColor,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+            unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
+            tabs: const [
               Tab(text: "PENDING"),
               Tab(text: "HISTORY"),
             ],
           ),
-          iconTheme: const IconThemeData(color: Colors.black),
+          iconTheme: const IconThemeData(color: Colors.white70),
         ),
         body: TabBarView(
           children: [
@@ -86,9 +90,9 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment_turned_in_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 10),
-          Text(msg, style: GoogleFonts.outfit(color: Colors.grey)),
+          Icon(Icons.assignment_turned_in_rounded, size: 80, color: Colors.white.withValues(alpha: 0.05)),
+          const SizedBox(height: 16),
+          Text(msg.toUpperCase(), style: GoogleFonts.outfit(color: Colors.white24, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1)),
         ],
       ),
     );
@@ -98,46 +102,64 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
     final status = (loan['status'] ?? 'N/A').toString().toUpperCase();
     final statusColor = status == 'CREATED' ? Colors.orange : status == 'APPROVED' ? Colors.green : Colors.blue;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      margin: const EdgeInsets.only(bottom: 15),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(loan['loan_id'] ?? "Draft", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(loan['loan_id'] ?? "NEW REQUEST", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                  child: Text(status, style: GoogleFonts.outfit(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: statusColor.withValues(alpha: 0.2))),
+                  child: Text(status, style: GoogleFonts.outfit(color: statusColor, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                 ),
               ],
             ),
-            const Divider(),
-            _infoRow(Icons.person, "Customer", loan['customer_name'] ?? "Unknown"),
-            _infoRow(Icons.currency_rupee, "Amount", "₹${loan['principal_amount'] ?? 0}"),
-            _infoRow(Icons.percent, "Interest", "${loan['interest_rate'] ?? 0}% (${loan['interest_type'] ?? 'flat'})"),
-            _infoRow(Icons.calendar_month, "Tenure", "${loan['tenure'] ?? 0} ${loan['tenure_unit'] ?? 'days'}"),
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white10),
+            const SizedBox(height: 8),
+            _infoRow(Icons.person_rounded, "Customer", loan['customer_name'] ?? "Unknown"),
+            _infoRow(Icons.payments_rounded, "Amount", "₹${loan['principal_amount'] ?? 0}"),
+            _infoRow(Icons.percent_rounded, "Interest", "${loan['interest_rate'] ?? 0}% (${loan['interest_type'] ?? 'flat'})"),
+            _infoRow(Icons.calendar_today_rounded, "Tenure", "${loan['tenure'] ?? 0} ${loan['tenure_unit'] ?? 'days'}"),
             if (loan['status'] == 'created') ...[
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                        foregroundColor: Colors.white70,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                       onPressed: () {}, // TODO: Reject
-                      child: const Text("Reject"),
+                      child: Text("REJECT", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1)),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                      ),
                       onPressed: () => _approveAction(loan),
-                      child: const Text("Approve"),
+                      child: Text("APPROVE", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 1)),
                     ),
                   ),
                 ],
@@ -151,14 +173,18 @@ class _LoanApprovalScreenState extends State<LoanApprovalScreen> {
 
   Widget _infoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.blueGrey),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), shape: BoxShape.circle),
+            child: Icon(icon, size: 14, color: Colors.white54),
+          ),
+          const SizedBox(width: 12),
+          Text("${label.toUpperCase()}:", style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
           const SizedBox(width: 8),
-          Text("$label:", style: GoogleFonts.outfit(color: Colors.grey, fontSize: 13)),
-          const SizedBox(width: 5),
-          Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 14)),
+          Expanded(child: Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white))),
         ],
       ),
     );

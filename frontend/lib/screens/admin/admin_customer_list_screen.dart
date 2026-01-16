@@ -82,34 +82,45 @@ class _AdminCustomerListScreenState extends State<AdminCustomerListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('All Customers', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text('All Customers', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white70),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search by Name, Mobile, ID...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                filled: true,
-                fillColor: Colors.white,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: Column(
+          children: [
+            SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                style: GoogleFonts.outfit(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search by Name, Mobile, ID...',
+                  hintStyle: const TextStyle(color: Colors.white24),
+                  prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
               ),
             ),
-          ),
-          Expanded(
+            Expanded(
             child: _isLoading && _customers.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : _customers.isEmpty
-                    ? Center(child: Text('No customers found', style: GoogleFonts.outfit(fontSize: 16, color: Colors.grey)))
+                    ? Center(child: Text('No customers found', style: GoogleFonts.outfit(fontSize: 16, color: Colors.white30)))
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: _customers.length + (_page < _totalPages ? 1 : 0),
@@ -127,9 +138,13 @@ class _AdminCustomerListScreenState extends State<AdminCustomerListScreen> {
                            final customer = _customers[index];
 
 
-                           return Card(
+                           return Container(
                              margin: const EdgeInsets.only(bottom: 12),
-                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                             decoration: BoxDecoration(
+                               color: Colors.white.withValues(alpha: 0.05),
+                               borderRadius: BorderRadius.circular(24),
+                               border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                             ),
                              child: ListTile(
                                onTap: () async {
                                  await Navigator.push(
@@ -138,16 +153,48 @@ class _AdminCustomerListScreenState extends State<AdminCustomerListScreen> {
                                  );
                                  _loadCustomers(refresh: true);
                                },
-                               leading: CircleAvatar(
-                                 backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                                 child: Text(customer['name'][0].toUpperCase(), style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                               leading: Container(
+                                 width: 52,
+                                 height: 52,
+                                 decoration: BoxDecoration(
+                                   color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                   borderRadius: BorderRadius.circular(18),
+                                 ),
+                                 child: Center(
+                                   child: Text(
+                                     customer['name'][0].toUpperCase(), 
+                                     style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 18)
+                                   ),
+                                 ),
                                ),
-                               title: Text(customer['name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                               subtitle: Text("${customer['customer_id'] ?? 'Pending'} • ${customer['mobile']}"),
-                               trailing: Chip(
-                                 label: Text(customer['status'] ?? 'Active', style: const TextStyle(fontSize: 10, color: Colors.white)),
-                                 backgroundColor: customer['status'] == 'active' ? Colors.green : Colors.grey,
-                                 padding: EdgeInsets.zero,
+                               title: Text(customer['name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white)),
+                               subtitle: Text(
+                                 "${customer['customer_id'] ?? 'Pending'} • ${customer['mobile']}",
+                                 style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13),
+                               ),
+                               trailing: Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   Container(
+                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                     decoration: BoxDecoration(
+                                       color: customer['status'] == 'active' ? Colors.green.withValues(alpha: 0.1) : Colors.white10,
+                                       borderRadius: BorderRadius.circular(20),
+                                     ),
+                                     child: Text(
+                                       (customer['status'] ?? 'Active').toUpperCase(), 
+                                       style: GoogleFonts.outfit(
+                                         fontSize: 10, 
+                                         fontWeight: FontWeight.w900,
+                                         color: customer['status'] == 'active' ? Colors.green : Colors.white38,
+                                         letterSpacing: 0.5
+                                       )
+                                     ),
+                                   ),
+                                   const SizedBox(width: 8),
+                                   const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 14),
+                                 ],
                                ),
                              ),
                            );
@@ -156,20 +203,23 @@ class _AdminCustomerListScreenState extends State<AdminCustomerListScreen> {
           ),
         ],
       ),
-       floatingActionButton: FloatingActionButton.extended(
-         onPressed: () async {
-           final result = await showDialog(
-             context: context,
-             builder: (context) => const AddCustomerDialog(),
-           );
-           if (result == true && mounted) {
-             _loadCustomers(refresh: true);
-           }
-         },
-         backgroundColor: AppTheme.primaryColor,
-         icon: const Icon(Icons.person_add, color: Colors.white),
-         label: Text('Add Customer', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
-       ),
-    );
-  }
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: () async {
+        final result = await showDialog(
+          context: context,
+          builder: (context) => const AddCustomerDialog(),
+        );
+        if (result == true && mounted) {
+          _loadCustomers(refresh: true);
+        }
+      },
+      backgroundColor: AppTheme.primaryColor,
+      icon: const Icon(Icons.person_add_rounded, color: Colors.black),
+      label: Text('Add Customer'.toUpperCase(), style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, letterSpacing: 1)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+  );
+
+}
 }

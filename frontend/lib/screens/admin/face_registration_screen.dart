@@ -173,22 +173,33 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
             title: Text(
               context.translate('face_registration'),
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
             ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
           ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(32, 100, 32, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     widget.userName,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900),
+                    style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -202,9 +213,9 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                       width: 300,
                       height: 300,
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceColor,
+                        color: Colors.white.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primaryColor, width: 4),
+                        border: Border.all(color: AppTheme.primaryColor, width: 2),
                         boxShadow: [
                           BoxShadow(
                             color: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -256,44 +267,49 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                     ElevatedButton.icon(
                       onPressed: _takePhoto,
                       icon: const Icon(Icons.camera_rounded),
-                      label: Text(context.translate('capture')),
+                      label: Text(context.translate('capture'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         backgroundColor: AppTheme.primaryColor,
                         foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                     )
                   else
                     OutlinedButton.icon(
                       onPressed: () => setState(() => _imageFile = null),
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: Text(context.translate('retake')),
+                      icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
+                      label: Text(context.translate('retake'), style: GoogleFonts.outfit(color: Colors.white70)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 20),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                     ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _imageFile == null || _isLoading ? null : _handleRegisterFace,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 20),
-                        backgroundColor: AppTheme.primaryColor,
+                        backgroundColor: _imageFile == null ? Colors.grey.withValues(alpha: 0.2) : Colors.white,
                         foregroundColor: Colors.black,
+                        disabledBackgroundColor: Colors.grey.withValues(alpha: 0.1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: _isLoading
-                          ? Column(
-                              mainAxisSize: MainAxisSize.min,
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2)),
-                                const SizedBox(height: 4),
-                                Text(_statusMessage ?? "", style: const TextStyle(fontSize: 10, color: Colors.black54)),
+                                const SizedBox(width: 12),
+                                Text(_statusMessage ?? "", style: GoogleFonts.outfit(fontSize: 14, color: Colors.black54)),
                               ],
                             )
                           : Text(
                               context.translate('save_face'), 
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)
+                              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)
                             ),
                     ),
                   ),
@@ -302,7 +318,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
                     onPressed: () => Navigator.pop(context),
                     child: Text(
                       context.translate('skip'), 
-                      style: const TextStyle(color: Colors.white38)
+                      style: GoogleFonts.outfit(color: Colors.white38)
                     ),
                   ),
                 ],

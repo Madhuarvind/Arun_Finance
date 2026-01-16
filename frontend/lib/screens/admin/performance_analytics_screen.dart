@@ -41,40 +41,52 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(context.translate('performance_analytics'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(context.translate('performance_analytics'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle(context.translate('role_distribution')),
-                  const SizedBox(height: 16),
-                  _buildRoleDistributionChart(),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle(context.translate('biometric_adoption')),
-                  const SizedBox(height: 16),
-                  _buildBiometricAdoptionCard(),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle(context.translate('login_activity')),
-                  const SizedBox(height: 16),
-                  _buildLoginActivityChart(),
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SafeArea(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle(context.translate('role_distribution')),
+                      const SizedBox(height: 16),
+                      _buildRoleDistributionChart(),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle(context.translate('biometric_adoption')),
+                      const SizedBox(height: 16),
+                      _buildBiometricAdoptionCard(),
+                      const SizedBox(height: 32),
+                      _buildSectionTitle(context.translate('login_activity')),
+                      const SizedBox(height: 16),
+                      _buildLoginActivityChart(),
+                    ],
+                  ),
+                ),
+        ),
+      ),
     );
   }
 
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
+      style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
     );
   }
 
@@ -90,7 +102,7 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
         title: '$count',
         color: colors[i % colors.length],
         radius: 50,
-        titleStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+        titleStyle: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
       ));
       i++;
     });
@@ -98,7 +110,11 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
     return Container(
       height: 200,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
       child: Row(
         children: [
           Expanded(child: PieChart(PieChartData(sections: sections, centerSpaceRadius: 40))),
@@ -120,7 +136,7 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
         children: [
           Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 8),
-          Text(label.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text(label.toUpperCase(), style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70)),
         ],
       ),
     );
@@ -130,13 +146,17 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
     double rate = (_stats?['biometric_adoption'] as num?)?.toDouble() ?? 0.0;
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Adoption Rate', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              Text('Adoption Rate', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
               Text('${rate.toStringAsFixed(1)}%', style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.w900, fontSize: 20)),
             ],
           ),
@@ -146,12 +166,12 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
             child: LinearProgressIndicator(
               value: rate / 100,
               minHeight: 12,
-              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+              backgroundColor: Colors.white10,
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
             ),
           ),
           const SizedBox(height: 12),
-          const Text('Percentage of users who have registered face biometric', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          Text('Percentage of users who have registered face biometric', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
         ],
       ),
     );
@@ -160,21 +180,38 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
   Widget _buildLoginActivityChart() {
     final activity = List<Map<String, dynamic>>.from(_stats?['login_activity'] ?? []);
     if (activity.isEmpty) {
-
       return const SizedBox();
-
     }
 
     return Container(
       height: 250,
       padding: const EdgeInsets.only(top: 24, right: 24, bottom: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
       child: LineChart(
         LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(color: Colors.white.withValues(alpha: 0.05), strokeWidth: 1),
+          ),
+          titlesData: FlTitlesData(
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, getTitlesWidget: (val, meta) => Text(val.toInt().toString(), style: GoogleFonts.outfit(color: Colors.white30, fontSize: 10)))),
+            bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30, getTitlesWidget: (val, meta) {
+               if (val.toInt() >= 0 && val.toInt() < activity.length) {
+                 final dt = DateTime.parse(activity[val.toInt()]['date']);
+                 return Padding(
+                   padding: const EdgeInsets.only(top: 4.0),
+                   child: Text("${dt.day}/${dt.month}", style: GoogleFonts.outfit(color: Colors.white30, fontSize: 10)),
+                 );
+               }
+               return const Text('');
+            })),
           ),
           borderData: FlBorderData(show: false),
           lineBarsData: [
@@ -182,9 +219,12 @@ class _PerformanceAnalyticsScreenState extends State<PerformanceAnalyticsScreen>
               spots: activity.asMap().entries.map((e) => FlSpot(e.key.toDouble(), (e.value['count'] as num).toDouble())).toList(),
               isCurved: true,
               color: AppTheme.primaryColor,
-              barWidth: 4,
+              barWidth: 3,
               isStrokeCapRound: true,
-              dotData: const FlDotData(show: true),
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(radius: 4, color: AppTheme.primaryColor, strokeWidth: 2, strokeColor: Colors.black),
+              ),
               belowBarData: BarAreaData(show: true, color: AppTheme.primaryColor.withValues(alpha: 0.1)),
             ),
           ],

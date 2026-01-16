@@ -85,137 +85,169 @@ class _LoanDocumentsScreenState extends State<LoanDocumentsScreen> {
     return await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Document Type'),
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: Text('Select Document Type', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: const Text('Agreement'), onTap: () => Navigator.pop(context, 'agreement')),
-            ListTile(title: const Text('Signature'), onTap: () => Navigator.pop(context, 'signature')),
-            ListTile(title: const Text('ID Proof'), onTap: () => Navigator.pop(context, 'id_proof')),
-            ListTile(title: const Text('Other'), onTap: () => Navigator.pop(context, 'other')),
+            _dialogTile('Agreement', 'agreement'),
+            _dialogTile('Signature', 'signature'),
+            _dialogTile('ID Proof', 'id_proof'),
+            _dialogTile('Other', 'other'),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _dialogTile(String title, String value) {
+    return ListTile(
+      title: Text(title, style: GoogleFonts.outfit(color: Colors.white)),
+      onTap: () => Navigator.pop(context, value),
+      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white24),
     );
   }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('Loan ${widget.loanNumber}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text('Loan ${widget.loanNumber}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.upload_file),
+            icon: const Icon(Icons.upload_file_rounded),
             onPressed: _uploadDocument,
-          )
+          ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : RefreshIndicator(
-            onRefresh: _fetchData,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Penalty Summary Card
-                  if (_penaltySummary != null && (_penaltySummary!['total_penalty'] ?? 0) > 0)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.red[700]!, Colors.red[500]!],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
-                              const SizedBox(width: 12),
-                              Text('Penalty Alert', style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                            ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+          : RefreshIndicator(
+              onRefresh: _fetchData,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(top: 100, left: 20, right: 20, bottom: 20),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Penalty Summary Card
+                    if (_penaltySummary != null && (_penaltySummary!['total_penalty'] ?? 0) > 0)
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFFEF4444), Color(0xFFB91C1C)],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '₹${_penaltySummary!['total_penalty']}',
-                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)
-                          ),
-                          Text(
-                            '${_penaltySummary!['overdue_count']} overdue EMI(s)',
-                            style: const TextStyle(color: Colors.white70, fontSize: 14)
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Grace Period: ${_penaltySummary!['grace_period_days']} days',
-                            style: const TextStyle(color: Colors.white70, fontSize: 12)
-                          ),
-                        ],
-                      ),
-                    ),
-                  
-                  if (_penaltySummary != null && (_penaltySummary!['total_penalty'] ?? 0) > 0)
-                    const SizedBox(height: 24),
-                  
-                  // Documents Section
-                  Text('Documents', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  
-                  if (_documents.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(40),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(Icons.folder_open, size: 48, color: Colors.grey[400]),
-                            const SizedBox(height: 12),
-                            Text('No documents uploaded', style: TextStyle(color: Colors.grey[600])),
+                          borderRadius: BorderRadius.circular(32),
+                          boxShadow: [
+                            BoxShadow(color: Colors.red.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10)),
                           ],
                         ),
-                      ),
-                    )
-                  else
-                    ...(_documents.map((doc) => _buildDocumentTile(doc)).toList()),
-                ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                  child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24),
+                                ),
+                                const SizedBox(width: 12),
+                                Text('PENALTY ALERT', style: GoogleFonts.outfit(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              '₹${_penaltySummary!['total_penalty']}',
+                              style: GoogleFonts.outfit(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${_penaltySummary!['overdue_count']} OVERDUE INSTALMENTS',
+                              style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5)
+                            ),
+                            const SizedBox(height: 20),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+                              child: Text(
+                                'Grace Period: ${_penaltySummary!['grace_period_days']} days',
+                                style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500)
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_documents.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(40),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        ),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.folder_open_rounded, size: 48, color: Colors.white.withValues(alpha: 0.1)),
+                              const SizedBox(height: 16),
+                              Text('NO DOCUMENTS UPLOADED', style: GoogleFonts.outfit(color: Colors.white24, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1)),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      for (var doc in _documents) _buildDocumentTile(doc),
+                  ],
+                ),
               ),
             ),
-          ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _uploadDocument,
         backgroundColor: AppTheme.primaryColor,
-        icon: const Icon(Icons.add),
-        label: const Text('Upload Document'),
+        foregroundColor: Colors.black,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.add_rounded),
+        label: Text('UPLOAD', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1)),
       ),
     );
   }
   
   Widget _buildDocumentTile(Map<String, dynamic> doc) {
     final icons = {
-      'agreement': Icons.description,
-      'signature': Icons.draw,
-      'id_proof': Icons.badge,
-      'other': Icons.insert_drive_file,
+      'agreement': Icons.description_rounded,
+      'signature': Icons.draw_rounded,
+      'id_proof': Icons.badge_rounded,
+      'other': Icons.insert_drive_file_rounded,
     };
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
@@ -223,21 +255,22 @@ class _LoanDocumentsScreenState extends State<LoanDocumentsScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icons[doc['doc_type']] ?? Icons.insert_drive_file, color: AppTheme.primaryColor),
+            child: Icon(icons[doc['doc_type']] ?? Icons.insert_drive_file_rounded, color: AppTheme.primaryColor, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(doc['filename'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-                Text(doc['doc_type'].toString().toUpperCase(), style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(doc['filename'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                const SizedBox(height: 4),
+                Text(doc['doc_type'].toString().toUpperCase(), style: GoogleFonts.outfit(fontSize: 10, color: Colors.white38, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: Colors.grey),
+          const Icon(Icons.chevron_right_rounded, color: Colors.white24),
         ],
       ),
     );

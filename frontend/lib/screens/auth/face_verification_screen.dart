@@ -123,14 +123,14 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
+      return Scaffold(
+        backgroundColor: const Color(0xFF0F172A),
+        body: const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0F172A),
       body: Stack(
         children: [
           // Full Screen Camera
@@ -138,17 +138,18 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
             child: CameraPreview(_controller!),
           ),
           
-          // Overlay
+          // Overlay Gradient
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withValues(alpha: 0.7),
+                  const Color(0xFF0F172A), // Dissolve into Deep Slate at top
                   Colors.transparent,
-                  Colors.black.withValues(alpha: 0.7)
+                  const Color(0xFF0F172A).withValues(alpha: 0.9), // Stronger fade at bottom
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
+                stops: const [0.0, 0.4, 1.0],
               )
             ),
           ),
@@ -161,15 +162,23 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      const Icon(Icons.security, color: AppTheme.primaryColor, size: 32),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.security, color: AppTheme.primaryColor, size: 32),
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         "Security Check",
-                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.outfit(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(height: 8),
                       Text(
                         "New device detected. Verify face to continue.",
-                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 14),
+                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 16),
                       ),
                     ],
                   ),
@@ -181,15 +190,16 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                 if (_statusMessage != null)
                   Container(
                     margin: const EdgeInsets.only(bottom: 24),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.black54,
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.white24)
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: Text(
                       _statusMessage!,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
 
@@ -203,11 +213,14 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                       onPressed: _isProcessing ? null : _captureAndVerify,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 8,
+                        shadowColor: AppTheme.primaryColor.withValues(alpha: 0.4),
                       ),
                       child: _isProcessing 
                         ? const CircularProgressIndicator(color: Colors.black)
-                        : Text("VERIFY IDENTITY", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.black)),
+                        : Text("VERIFY IDENTITY", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
                     ),
                   ),
                 ),

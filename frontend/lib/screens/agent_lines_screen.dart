@@ -50,11 +50,15 @@ class _AgentLinesScreenState extends State<AgentLinesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         title: Text(
           AppLocalizations.of(context).translate('my_lines'),
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white70),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -63,35 +67,59 @@ class _AgentLinesScreenState extends State<AgentLinesScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.assignment_late_outlined, size: 60, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.assignment_late_rounded, size: 64, color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                      const SizedBox(height: 24),
                       Text(
-                        "No line assigned for you",
-                        style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                        "NO LINES ASSIGNED",
+                        style: GoogleFonts.outfit(fontSize: 14, color: Colors.white24, fontWeight: FontWeight.w900, letterSpacing: 1.5),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Please contact your admin for assignment.",
-                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade500),
+                        "CONTACT ADMIN FOR ASSIGNMENT",
+                        style: GoogleFonts.outfit(fontSize: 11, color: Colors.white12, fontWeight: FontWeight.bold, letterSpacing: 1),
                       ),
                     ],
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   itemCount: _lines.length,
                   itemBuilder: (context, index) {
                     final line = _lines[index];
-                    return Card(
-                      elevation: 3,
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      ),
                       child: ListTile(
-                        leading: const Icon(Icons.route, color: Colors.blue),
-                        title: Text(line['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${line['area']} • ${line['customer_count']} Customers'),
-                        trailing: line['is_locked'] ? const Icon(Icons.lock, color: Colors.red) : const Icon(Icons.chevron_right),
+                        contentPadding: const EdgeInsets.all(20),
+                        leading: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(Icons.route_rounded, color: AppTheme.primaryColor, size: 24),
+                        ),
+                        title: Text(line['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18)),
+                        subtitle: Text(
+                          '${line['area']} • ${line['customer_count']} CUSTOMERS', 
+                          style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)
+                        ),
+                        trailing: line['is_locked'] 
+                          ? const Icon(Icons.lock_rounded, color: Colors.redAccent, size: 20) 
+                          : const Icon(Icons.chevron_right_rounded, color: Colors.white24),
                         onTap: line['is_locked'] 
-                          ? () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Line is locked')))
+                          ? () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Line is locked'), backgroundColor: Colors.red))
                           : () => _viewLineCustomers(line),
                       ),
                     );
@@ -224,10 +252,10 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      height: MediaQuery.of(context).size.height * 0.85,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
       decoration: const BoxDecoration(
-        color: AppTheme.backgroundColor,
+        color: Color(0xFF1E293B),
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: DefaultTabController(
@@ -242,14 +270,15 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.line['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold)),
+                      Text(widget.line['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.5)),
+                      const SizedBox(height: 4),
                       _isLoading 
-                        ? const Text("Loading...", style: TextStyle(fontSize: 12, color: Colors.grey))
+                        ? const Text("Loading...", style: TextStyle(fontSize: 12, color: Colors.white24))
                         : Row(
                             children: [
                               Text(
-                                "${_collectedCustomers.length} / ${_pendingCustomers.length + _collectedCustomers.length} Collected Today",
-                                style: const TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+                                "${_collectedCustomers.length} / ${_pendingCustomers.length + _collectedCustomers.length} COLLECTED",
+                                style: GoogleFonts.outfit(fontSize: 10, color: AppTheme.primaryColor, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                               ),
                               if (widget.line['start_time'] != null && widget.line['end_time'] != null) ...[
                                 const SizedBox(width: 8),
@@ -258,7 +287,7 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                                   decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                                   child: Text(
                                     "${widget.line['start_time']} - ${widget.line['end_time']}",
-                                    style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                                    style: GoogleFonts.outfit(fontSize: 9, color: Colors.blue, fontWeight: FontWeight.w900),
                                   ),
                                 ),
                               ],
@@ -269,14 +298,18 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                 ),
                 TextButton.icon(
                   onPressed: _optimizeRoute, 
-                  icon: const Icon(Icons.auto_awesome, size: 18, color: Colors.indigo),
-                  label: Text("AI Optimize", style: GoogleFonts.outfit(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 12)),
-                  style: TextButton.styleFrom(backgroundColor: Colors.indigo.withValues(alpha: 0.1), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFF6366F1)),
+                  label: Text("AI", style: GoogleFonts.outfit(color: const Color(0xFF6366F1), fontWeight: FontWeight.w900, fontSize: 11)),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1).withValues(alpha: 0.1), 
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.05), shape: BoxShape.circle),
-                  child: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, size: 20)),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), shape: BoxShape.circle),
+                  child: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white38)),
                 ),
               ],
             ),
@@ -300,24 +333,23 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
             ),
             const SizedBox(height: 16),
             Container(
-              height: 45,
+              height: 50,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: TabBar(
                 indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.white,
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)],
+                  borderRadius: BorderRadius.circular(14),
+                  color: const Color(0xFF334155),
                 ),
                 labelColor: AppTheme.primaryColor,
-                unselectedLabelColor: Colors.grey,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                unselectedLabelColor: Colors.white38,
+                labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1),
                 tabs: const [
                   Tab(text: "PENDING"),
-                  Tab(text: "COLLECTED"),
-                  Tab(text: "REPORT"),
+                  Tab(text: "PAID"),
+                  Tab(text: "STATS"),
                 ],
               ),
             ),
@@ -367,9 +399,9 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -402,26 +434,26 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                       )
                     : Text(
                         (index + 1).toString(),
-                        style: TextStyle(
+                        style: GoogleFonts.outfit(
                           color: isPending ? AppTheme.primaryColor : Colors.green,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
               ),
             ),
             title: Row(
               children: [
-                Expanded(child: Text(cust['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15))),
+                Expanded(child: Text(cust['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16))),
                 if ((cust['loan_count'] ?? 0) > 1)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     margin: const EdgeInsets.only(left: 8),
-                    decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8)),
-                    child: Text("${cust['loan_count']} Loans", style: TextStyle(fontSize: 10, color: Colors.blue.shade900, fontWeight: FontWeight.bold)),
+                    decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                    child: Text("${cust['loan_count']} LOANS", style: GoogleFonts.outfit(fontSize: 9, color: Colors.blue, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
                   ),
               ],
             ),
-            subtitle: Text(cust['area'] ?? 'No Area', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            subtitle: Text(cust['area'] ?? 'No Area', style: GoogleFonts.outfit(fontSize: 12, color: Colors.white38)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -485,11 +517,11 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.1)),
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: Column(
               children: [
@@ -497,21 +529,21 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    Expanded(child: _buildSimpleTally("Cash", "₹$_totalCash", Icons.money_rounded, Colors.orange)),
-                    Container(width: 1, height: 40, color: Colors.grey.withValues(alpha: 0.2)),
-                    Expanded(child: _buildSimpleTally("UPI", "₹$_totalUpi", Icons.account_balance_rounded, Colors.indigo)),
+                    Expanded(child: _buildSimpleTally("CASH", "₹$_totalCash", Icons.money_rounded, Colors.orangeAccent)),
+                    Container(width: 1, height: 40, color: Colors.white10),
+                    Expanded(child: _buildSimpleTally("UPI", "₹$_totalUpi", Icons.account_balance_rounded, Colors.indigoAccent)),
                   ],
                 ),
-                const Divider(height: 24),
-                _buildSummaryRow("Coverage", "$paidCount / $totalCustomers Customers", icon: Icons.people_rounded, color: Colors.blue),
+                const Divider(height: 24, color: Colors.white10),
+                _buildSummaryRow("COVERAGE", "$paidCount / $totalCustomers", icon: Icons.people_rounded, color: Colors.blueAccent),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Route Breakdown", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text("ROUTE BREAKDOWN", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white24, letterSpacing: 1.5)),
               _buildReportButton(context, Icons.print_rounded, "Print Full PDF", 'daily'),
             ],
           ),
@@ -532,12 +564,12 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
       children: [
         Row(
           children: [
-            if (icon != null) Icon(icon, size: 18, color: color ?? Colors.grey),
-            if (icon != null) const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w500)),
+            if (icon != null) Icon(icon, size: 16, color: color ?? Colors.white24),
+            if (icon != null) const SizedBox(width: 10),
+            Text(label, style: GoogleFonts.outfit(color: Colors.white60, fontWeight: FontWeight.bold, fontSize: 13)),
           ],
         ),
-        Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: color ?? Colors.black)),
+        Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20, color: color ?? Colors.white)),
       ],
     );
   }
@@ -576,19 +608,19 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Row(
             children: [
-              Icon(isPaid ? Icons.check_circle_rounded : Icons.radio_button_unchecked, color: isPaid ? Colors.green : Colors.grey, size: 18),
+              Icon(isPaid ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded, color: isPaid ? Colors.green : Colors.white10, size: 18),
               const SizedBox(width: 12),
-              Expanded(child: Text(cust['name'] ?? 'Unknown', style: TextStyle(fontWeight: isPaid ? FontWeight.bold : FontWeight.normal, fontSize: 14))),
+              Expanded(child: Text(cust['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: isPaid ? FontWeight.bold : FontWeight.normal, color: isPaid ? Colors.white : Colors.white38, fontSize: 14))),
               if (isPaid)
-                 Text("₹${cust['amount']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.green)),
+                 Text("₹${cust['amount']}", style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: Colors.green, fontSize: 16)),
               if (!isPaid)
-                 const Text("Pending", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                 Text("PENDING", style: GoogleFonts.outfit(color: Colors.white10, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
             ],
           ),
         ),
@@ -609,17 +641,26 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
           ).toList();
 
           return AlertDialog(
-            title: Text(AppLocalizations.of(dialogContext).translate('add_customer')),
+            backgroundColor: const Color(0xFF1E293B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            title: Text(
+              AppLocalizations.of(dialogContext).translate('add_customer'),
+              style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
             content: SizedBox(
               width: double.maxFinite,
               height: 400,
               child: Column(
                 children: [
-                  TextField(
+                   TextField(
+                    style: GoogleFonts.outfit(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(dialogContext).translate('search_users'),
-                      prefixIcon: const Icon(Icons.search),
-                      border: const OutlineInputBorder(),
+                      hintStyle: const TextStyle(color: Colors.white24),
+                      prefixIcon: const Icon(Icons.search_rounded, color: Colors.white24),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.05),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                     ),
                     onChanged: (val) => setDialogState(() => searchQuery = val),
                   ),
@@ -630,7 +671,10 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(AppLocalizations.of(dialogContext).translate('no_customers_found')),
+                                 Text(
+                                  AppLocalizations.of(dialogContext).translate('no_customers_found'),
+                                  style: GoogleFonts.outfit(color: Colors.white24),
+                                ),
                                 const SizedBox(height: 16),
                                 ElevatedButton.icon(
                                   onPressed: () async {
@@ -673,7 +717,10 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: Text(AppLocalizations.of(dialogContext).translate('cancel')),
+                child: Text(
+                  AppLocalizations.of(dialogContext).translate('cancel'),
+                  style: GoogleFonts.outfit(color: Colors.white38, fontWeight: FontWeight.bold)
+                ),
               ),
             ],
           );

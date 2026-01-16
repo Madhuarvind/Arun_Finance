@@ -128,33 +128,39 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
       builder: (context, languageProvider, child) {
         return Scaffold(
           key: _scaffoldKey,
+          extendBodyBehindAppBar: true,
           drawer: AppDrawer(
             userName: _userName ?? 'User',
             role: _role ?? 'field_agent',
           ),
           appBar: AppBar(
             automaticallyImplyLeading: false,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.menu_rounded),
+              icon: const Icon(Icons.menu_rounded, color: Colors.white),
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
             title: InkWell(
-              onTap: () {}, // TODO: Open search
+              onTap: () {}, 
               child: Container(
-                height: 40,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    Icon(Icons.search_rounded, color: AppTheme.secondaryTextColor.withValues(alpha: 0.5), size: 18),
+                    Icon(Icons.search_rounded, color: Colors.white54, size: 18),
                     const SizedBox(width: 8),
-                    Text(
-                      context.translate('search_collections'),
-                      style: TextStyle(color: AppTheme.secondaryTextColor.withValues(alpha: 0.5), fontSize: 13),
+                    Expanded(
+                      child: Text(
+                        context.translate('search_collections'),
+                        style: GoogleFonts.outfit(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.normal),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -162,278 +168,328 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_none_rounded),
+                icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
                 onPressed: () {},
               ),
               const SizedBox(width: 8),
             ],
           ),
-          body: _isLoading 
-            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-            : RefreshIndicator(
-                onRefresh: _loadAllData,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Premium Performance Card (Like Admin Balance Card)
-                      Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Container(
-                          width: double.infinity,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.primaryColor, Color(0xFFD4FF8B)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(32),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryColor.withValues(alpha: 0.3),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                right: -20,
-                                top: -20,
-                                child: Opacity(
-                                  opacity: 0.1,
-                                  child: Container(
-                                    width: 150,
-                                    height: 150,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+              : RefreshIndicator(
+                  onRefresh: _loadAllData,
+                  color: AppTheme.primaryColor,
+                  backgroundColor: Colors.white,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SafeArea(
+                      bottom: false,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Premium Performance Hub (Dark Premium Aesthetic)
+                          Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 15),
+                                  ),
+                                ],
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          context.translate('my_total_collection'),
-                                          style: GoogleFonts.outfit(
-                                            color: Colors.black.withValues(alpha: 0.6),
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16,
-                                          ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Stack(
+                                children: [
+                                  // Decorative Accent
+                                  Positioned(
+                                    right: -40,
+                                    top: -40,
+                                    child: Container(
+                                      width: 180,
+                                      height: 180,
+                                      decoration: BoxDecoration(
+                                        gradient: RadialGradient(
+                                          colors: [
+                                            AppTheme.primaryColor.withValues(alpha: 0.15),
+                                            AppTheme.primaryColor.withValues(alpha: 0),
+                                          ],
                                         ),
-                                        const Icon(Icons.trending_up_rounded, color: Colors.black, size: 28),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      '₹${_stats['collected']}',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 36,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.black,
+                                        shape: BoxShape.circle,
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
-                                    Row(
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(28.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        _buildCompactInfo('${context.translate('goal')}: ₹${_stats['goal']}', Colors.white, Colors.black),
-                                        const SizedBox(width: 12),
-                                        _buildCompactInfo(
-                                          '${((_stats['collected'] / _stats['goal']) * 100).toStringAsFixed(1)}%', 
-                                          Colors.black, 
-                                          Colors.white
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  context.translate('my_total_collection'),
+                                                  style: GoogleFonts.outfit(
+                                                    color: Colors.white70,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 14,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '₹${_stats['collected']}',
+                                                  style: GoogleFonts.outfit(
+                                                    fontSize: 38,
+                                                    fontWeight: FontWeight.w900,
+                                                    color: Colors.white,
+                                                    letterSpacing: -1,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+                                              ),
+                                              child: const Icon(Icons.flash_on_rounded, color: AppTheme.primaryColor, size: 28),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 24),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildCompactInfo(
+                                                '${context.translate('goal')}: ₹${_stats['goal']}', 
+                                                Colors.white.withValues(alpha: 0.05), 
+                                                Colors.white.withValues(alpha: 0.9)
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.primaryColor,
+                                                borderRadius: BorderRadius.circular(20),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(0, 4),
+                                                  )
+                                                ]
+                                              ),
+                                              child: Text(
+                                                '${((_stats['collected'] / _stats['goal']) * 100).toStringAsFixed(1)}%', 
+                                                style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              context.translate('quick_actions'),
-                              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                            ),
-                            Icon(Icons.swipe_left_rounded, size: 16, color: AppTheme.secondaryTextColor.withValues(alpha: 0.3)),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Horizontal Quick Actions (Like Admin)
-                      SizedBox(
-                        height: 110,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          children: [
-                            _buildModernActionTile(context, context.translate('my_stats'), Icons.assessment_outlined, '/worker/performance', Colors.cyan),
-                            const SizedBox(width: 16),
-                            _buildModernActionTile(context, context.translate('users'), Icons.people_outline_rounded, '', Colors.teal, isCustom: true, onTap: () {
-                               Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerListScreen()));
-                            }),
-                            const SizedBox(width: 16),
-                            _buildModernActionTile(context, context.translate('collection_history'), Icons.history_rounded, '/agent/collections', Colors.blueGrey),
-                            const SizedBox(width: 16),
-                            _buildModernActionTile(context, context.translate('daily_route'), Icons.map_outlined, '/agent/lines', Colors.purple),
-                            const SizedBox(width: 16),
-                            _buildModernActionTile(context, context.translate('qr_scan'), Icons.qr_code_scanner_rounded, '', Colors.orange, isCustom: true, onTap: () async {
-                               final result = await Navigator.push(
-                                 context,
-                                 MaterialPageRoute(builder: (context) => const QRScanScreen()),
-                               );
-                               if (result != null) {
-                                  if (!context.mounted) return;
-                                  
-                                   final resStr = result.toString().trim();
-                                   // Detect Digital Passbook (Unified ID or UUID)
-                                   final uuidRegex = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false);
-                                   
-                                   if (uuidRegex.hasMatch(resStr) || resStr.startsWith('CUST-')) {
-                                      Navigator.pushNamed(context, '/public/passbook', arguments: resStr);
-                                      return;
-                                   }
-                                  
-                                   // Show processing for regular customer QR
-                                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Identifying Customer...")));
-                                   
-                                   final customerData = await _apiService.getCustomerByQr(resStr);
-                                  
-                                  if (!context.mounted) return;
-                                  
-                                   if (customerData['msg'] == 'not_found' || customerData['id'] == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Customer not found!"), backgroundColor: Colors.red));
-                                   } else if (customerData['id'] != null) {
-                                     // Navigate to Collection Entry for this customer
-                                     Navigator.pushNamed(
-                                       context, 
-                                       '/collection_entry',
-                                       arguments: {
-                                         'customer_id': customerData['id'],
-                                         'customer_name': customerData['name'],
-                                         'customer_uid': customerData['customer_id']
-                                       }
-                                     );
-                                  } else {
-                                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error reading QR"), backgroundColor: Colors.red));
-                                  }
-                               }
-                            }),
-                            const SizedBox(width: 16),
-                            _buildModernActionTile(context, context.translate('security_hub'), Icons.security_outlined, '/security', Colors.indigo),
-                          ],
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              context.translate('recent_activity'),
-                              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                            ),
-                            Text(
-                              context.translate('track_all'),
-                              style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // Premium Recent History (Like Admin)
-                      if (_history.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.all(40.0),
-                          child: Center(
-                            child: Column(
-                              children: [
-                                Icon(Icons.history_toggle_off_rounded, color: Colors.grey[300], size: 48),
-                                const SizedBox(height: 16),
-                                Text(context.translate('no_recent_collections'), style: TextStyle(color: Colors.grey[400])),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                        ..._history.whereType<Map>().map((item) {
-                          final mapItem = item as Map<String, dynamic>;
-                          String status = (mapItem['status'] ?? 'pending').toString().toLowerCase();
-                          Color statusColor = status == 'approved' ? Colors.green : (status == 'pending' ? Colors.orange : Colors.red);
-                          
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12, left: 24, right: 24),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.backgroundColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Icon(
-                                  Icons.receipt_long_outlined,
-                                  color: statusColor,
-                                ),
-                              ),
-                              title: Text(
-                                mapItem['customer_name']?.toString() ?? 'Unknown Customer',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              subtitle: Text(
-                                '${(mapItem['payment_mode'] ?? 'cash').toString().toUpperCase()} • ${status.toUpperCase()}',
-                                style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12),
-                              ),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '₹${mapItem['amount'] ?? 0}',
-                                    style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 16),
-                                  ),
-                                  Text(
-                                    context.translate('recently'),
-                                    style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 10),
                                   ),
                                 ],
                               ),
                             ),
-                          );
-                        }),
-                      const SizedBox(height: 32),
-                    ],
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  context.translate('quick_actions'),
+                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                Icon(Icons.swipe_left_rounded, size: 16, color: Colors.white54),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Horizontal Quick Actions (Like Admin)
+                          SizedBox(
+                            height: 110,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              children: [
+                                _buildModernActionTile(context, context.translate('my_stats'), Icons.assessment_outlined, '/worker/performance', Colors.cyan),
+                                const SizedBox(width: 16),
+                                _buildModernActionTile(context, context.translate('users'), Icons.people_outline_rounded, '', Colors.teal, isCustom: true, onTap: () {
+                                   Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerListScreen()));
+                                }),
+                                const SizedBox(width: 16),
+                                _buildModernActionTile(context, context.translate('collection_history'), Icons.history_rounded, '/agent/collections', Colors.blueGrey),
+                                const SizedBox(width: 16),
+                                _buildModernActionTile(context, context.translate('daily_route'), Icons.map_outlined, '/agent/lines', Colors.purple),
+                                const SizedBox(width: 16),
+                                _buildModernActionTile(context, context.translate('qr_scan'), Icons.qr_code_scanner_rounded, '', Colors.orange, isCustom: true, onTap: () async {
+                                   final result = await Navigator.push(
+                                     context,
+                                     MaterialPageRoute(builder: (context) => const QRScanScreen()),
+                                   );
+                                   if (result != null) {
+                                      if (!context.mounted) return;
+                                      
+                                       final resStr = result.toString().trim();
+                                       // Detect Digital Passbook (Unified ID or UUID)
+                                       final uuidRegex = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false);
+                                       
+                                       if (uuidRegex.hasMatch(resStr) || resStr.startsWith('CUST-')) {
+                                          Navigator.pushNamed(context, '/public/passbook', arguments: resStr);
+                                          return;
+                                       }
+                                      
+                                       // Show processing for regular customer QR
+                                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Identifying Customer...")));
+                                       
+                                       final customerData = await _apiService.getCustomerByQr(resStr);
+                                      
+                                      if (!context.mounted) return;
+                                      
+                                       if (customerData['msg'] == 'not_found' || customerData['id'] == null) {
+                                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Customer not found!"), backgroundColor: Colors.red));
+                                       } else if (customerData['id'] != null) {
+                                         // Navigate to Collection Entry for this customer
+                                         Navigator.pushNamed(
+                                           context, 
+                                           '/collection_entry',
+                                           arguments: {
+                                             'customer_id': customerData['id'],
+                                             'customer_name': customerData['name'],
+                                             'customer_uid': customerData['customer_id']
+                                           }
+                                         );
+                                      } else {
+                                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error reading QR"), backgroundColor: Colors.red));
+                                      }
+                                   }
+                                }),
+                                const SizedBox(width: 16),
+                                _buildModernActionTile(context, context.translate('security_hub'), Icons.security_outlined, '/security', Colors.indigo),
+                              ],
+                            ),
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  context.translate('recent_activity'),
+                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                Text(
+                                  context.translate('track_all'),
+                                  style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          // Premium Recent History (Like Admin)
+                          if (_history.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(40.0),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.history_toggle_off_rounded, color: Colors.white24, size: 48),
+                                    const SizedBox(height: 16),
+                                    Text(context.translate('no_recent_collections'), style: GoogleFonts.outfit(color: Colors.white38)),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            ..._history.whereType<Map>().map((item) {
+                              final mapItem = item as Map<String, dynamic>;
+                              String status = (mapItem['status'] ?? 'pending').toString().toLowerCase();
+                              Color statusColor = status == 'approved' ? Colors.greenAccent : (status == 'pending' ? Colors.orangeAccent : Colors.redAccent);
+                              
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12, left: 24, right: 24),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  leading: Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      Icons.receipt_long_outlined,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    mapItem['customer_name']?.toString() ?? 'Unknown Customer',
+                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                                  ),
+                                  subtitle: Text(
+                                    '${(mapItem['payment_mode'] ?? 'cash').toString().toUpperCase()} • ${status.toUpperCase()}',
+                                    style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+                                  ),
+                                  trailing: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '₹${mapItem['amount'] ?? 0}',
+                                        style: GoogleFonts.outfit(color: statusColor, fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                      Text(
+                                        context.translate('recently'),
+                                        style: GoogleFonts.outfit(color: Colors.white38, fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+          ),
         );
       },
     );
@@ -445,10 +501,11 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: text.withValues(alpha: 0.1)),
       ),
       child: Text(
         label,
-        style: TextStyle(color: text, fontWeight: FontWeight.bold, fontSize: 12),
+        style: GoogleFonts.outfit(color: text, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }
@@ -456,13 +513,14 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
   Widget _buildModernActionTile(BuildContext context, String title, IconData icon, String route, Color themeColor, {bool isCustom = false, VoidCallback? onTap}) {
     return InkWell(
       onTap: isCustom ? onTap : () => Navigator.pushNamed(context, route).then((_) => _loadAllData()),
+      borderRadius: BorderRadius.circular(32),
       child: Container(
         width: 100,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -478,7 +536,7 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
             const SizedBox(height: 8),
             Text(
               title,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10, color: AppTheme.textColor),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 10, color: Colors.white),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../main.dart'; 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/theme.dart';
 
 class FaceEnrollmentScreen extends StatefulWidget {
   const FaceEnrollmentScreen({super.key});
@@ -129,94 +130,111 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
-        title: Text("Enroll Biometrics", style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.bold)),
+        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        title: Text("Enroll Biometrics", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text("Facial Recognition", textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text("Position your face in the circle to enroll.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 40),
-              Center(
-                child: Container(
-                  width: 280,
-                  height: 280,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 2),
-                  ),
-                  child: ClipOval(
-                    child: _imageFile != null
-                        ? (kIsWeb && _webImageBytes != null
-                            ? Image.memory(_webImageBytes!, fit: BoxFit.cover)
-                            : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
-                        : FutureBuilder<void>(
-                            future: _initializeControllerFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.done && _cameraInitialized) {
-                                return CameraPreview(_controller!);
-                              } else if (snapshot.hasError) {
-                                return const Center(child: Text("Camera Error", style: TextStyle(color: Colors.red)));
-                              } else {
-                                return const Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(color: Colors.black),
-                                      SizedBox(height: 10),
-                                      Text("Starting Camera...", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                    ],
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-              if (_imageFile == null)
-                ElevatedButton.icon(
-                  onPressed: _takePhoto,
-                  icon: const Icon(Icons.camera),
-                  label: const Text("CAPTURE PHOTO"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFB4F23E),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                )
-              else
-                Column(
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _handleEnrollFace,
-                      icon: const Icon(Icons.check),
-                      label: Text(_isLoading ? "ENROLLING..." : "CONFIRM ENROLLMENT"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text("Facial Recognition", textAlign: TextAlign.center, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 8),
+                  Text("Position your face in the circle to enroll.", textAlign: TextAlign.center, style: GoogleFonts.outfit(color: Colors.white54)),
+                  const SizedBox(height: 40),
+                  Center(
+                    child: Container(
+                      width: 280,
+                      height: 280,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.primaryColor, width: 4),
+                        boxShadow: [
+                          BoxShadow(color: AppTheme.primaryColor.withValues(alpha: 0.3), blurRadius: 40)
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: _imageFile != null
+                            ? (kIsWeb && _webImageBytes != null
+                                ? Image.memory(_webImageBytes!, fit: BoxFit.cover)
+                                : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
+                            : FutureBuilder<void>(
+                                future: _initializeControllerFuture,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.done && _cameraInitialized) {
+                                    return CameraPreview(_controller!);
+                                  } else if (snapshot.hasError) {
+                                    return const Center(child: Text("Camera Error", style: TextStyle(color: Colors.red)));
+                                  } else {
+                                    return const Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircularProgressIndicator(color: AppTheme.primaryColor),
+                                          SizedBox(height: 10),
+                                          Text("Starting Camera...", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextButton(onPressed: () => setState(() => _imageFile = null), child: const Text("RETAKE PHOTO")),
-                  ],
-                ),
-            ],
+                  ),
+                  const SizedBox(height: 40),
+                  if (_imageFile == null)
+                    ElevatedButton.icon(
+                      onPressed: _takePhoto,
+                      icon: const Icon(Icons.camera_alt_rounded),
+                      label: Text("CAPTURE PHOTO", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    )
+                  else
+                    Column(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _handleEnrollFace,
+                          icon: const Icon(Icons.check_circle_rounded),
+                          label: Text(_isLoading ? "ENROLLING..." : "CONFIRM ENROLLMENT", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => setState(() => _imageFile = null), 
+                          child: Text("RETAKE PHOTO", style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.bold))
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

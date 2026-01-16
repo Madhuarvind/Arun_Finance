@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../utils/theme.dart';
 
 class QRScanScreen extends StatefulWidget {
@@ -15,8 +16,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Scan QR Code'),
+        title: Text('Scan QR Code', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -37,12 +39,12 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     const SizedBox(height: 16),
                     Text(
                       'Camera Error: ${error.errorCode}',
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
                     ),
                     if (error.errorDetails?.message != null)
                       Text(
                         error.errorDetails!.message!,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                   ],
@@ -78,20 +80,21 @@ class _QRScanScreenState extends State<QRScanScreen> {
             bottom: 80,
             left: 0,
             right: 0,
-            child: const  Center(
-              child: Text(
-                'Align QR code within the frame',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 4,
-                      color: Colors.black,
-                    ),
-                  ],
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Text(
+                  'Align QR code within the frame',
+                  style: GoogleFonts.outfit(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

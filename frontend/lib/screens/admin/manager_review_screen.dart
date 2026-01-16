@@ -128,11 +128,12 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(context.translate('collection_review'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text(context.translate('collection_review'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_month_outlined),
@@ -144,7 +145,7 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Colors.white60,
           indicatorColor: AppTheme.primaryColor,
           tabs: [
             Tab(text: "Pending (${_pending.length})"),
@@ -152,22 +153,33 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : Column(
-              children: [
-                _buildSummaryBanner(),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildPendingList(),
-                      _buildHistoryList(),
-                    ],
-                  ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SafeArea(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+              : Column(
+                  children: [
+                    _buildSummaryBanner(),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildPendingList(),
+                          _buildHistoryList(),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+        ),
+      ),
     );
   }
 
@@ -180,16 +192,16 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
       margin: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(rangeText, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+              Text(rangeText, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54)),
               InkWell(
                 onTap: _selectDateRange,
                 child: const Text("Change", style: TextStyle(color: AppTheme.primaryColor, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -200,9 +212,9 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _summaryItem("Total Value", "₹${_summary['total']}", Colors.green),
-              _summaryItem("Count", "${_summary['count']}", Colors.blue),
-              _summaryItem("Cash/UPI", "₹${_summary['cash']}/₹${_summary['upi']}", Colors.orange),
+              Expanded(child: _summaryItem("Total Value", "₹${_summary['total']}", Colors.greenAccent)),
+              Expanded(child: _summaryItem("Count", "${_summary['count']}", Colors.blueAccent)),
+              Expanded(child: _summaryItem("Cash/UPI", "₹${_summary['cash']}/₹${_summary['upi']}", Colors.orangeAccent)),
             ],
           ),
         ],
@@ -214,7 +226,7 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
     return Column(
       children: [
         Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10)),
       ],
     );
   }
@@ -263,9 +275,9 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -277,13 +289,13 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(c['customer_name'] ?? 'Loan #${c['loan_id']}', style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(c['customer_name'] ?? 'Loan #${c['loan_id']}', style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold)),
                     Text(
                       '₹ ${c['amount']}',
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textColor,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -305,22 +317,22 @@ class _ManagerReviewScreenState extends State<ManagerReviewScreen> with SingleTi
                     const SizedBox(height: 4),
                     Text(
                       c['mode']?.toString().toUpperCase() ?? 'CASH',
-                      style: const TextStyle(color: Colors.grey, fontSize: 9),
+                      style: const TextStyle(color: Colors.white38, fontSize: 9),
                     ),
                   ],
                 ),
               ],
             ),
-            const Divider(height: 32),
+            Divider(height: 32, color: Colors.white.withValues(alpha: 0.1)),
             Row(
               children: [
-                const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                const Icon(Icons.person_outline, size: 16, color: Colors.white38),
                 const SizedBox(width: 8),
-                Text('Agent: ${c['agent_name'] ?? c['agent']}', style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12)),
+                Text('Agent: ${c['agent_name'] ?? c['agent']}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
                 const Spacer(),
-                const Icon(Icons.access_time_rounded, size: 16, color: Colors.grey),
+                const Icon(Icons.access_time_rounded, size: 16, color: Colors.white38),
                 const SizedBox(width: 4),
-                Text(formattedDate, style: const TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12)),
+                Text(formattedDate, style: const TextStyle(color: Colors.white70, fontSize: 12)),
               ],
             ),
             if (isActionable) ...[

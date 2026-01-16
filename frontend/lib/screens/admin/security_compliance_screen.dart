@@ -61,56 +61,66 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(context.translate('security_compliance_title'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text(context.translate('security_compliance_title'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.download_rounded, color: AppTheme.primaryColor),
+            icon: const Icon(Icons.download_rounded, color: Colors.white),
             onPressed: _exportAudit,
             tooltip: "Export CSV",
           )
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchData,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionHeader(context.translate('data_integrity'), Icons.shield_outlined),
-                    _buildTamperCard(),
-                    const SizedBox(height: 30),
-                    _buildSectionHeader(context.translate('role_abuse'), Icons.gpp_maybe_outlined),
-                    _buildAbuseSection(),
-                    const SizedBox(height: 30),
-                    _buildSectionHeader(context.translate('device_monitoring'), Icons.devices_other_rounded),
-                    _buildDeviceSection(),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => Navigator.pushNamed(context, '/admin/master_settings'),
-                        icon: const Icon(Icons.settings_suggest_rounded, color: AppTheme.primaryColor),
-                        label: Text(context.translate('system_configuration'), style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          side: const BorderSide(color: AppTheme.primaryColor),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : RefreshIndicator(
+                onRefresh: _fetchData,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(top: 100, left: 20, right: 20, bottom: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(context.translate('data_integrity'), Icons.shield_outlined),
+                      _buildTamperCard(),
+                      const SizedBox(height: 30),
+                      _buildSectionHeader(context.translate('role_abuse'), Icons.gpp_maybe_outlined),
+                      _buildAbuseSection(),
+                      const SizedBox(height: 30),
+                      _buildSectionHeader(context.translate('device_monitoring'), Icons.devices_other_rounded),
+                      _buildDeviceSection(),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => Navigator.pushNamed(context, '/admin/master_settings'),
+                          icon: const Icon(Icons.settings_suggest_rounded, color: AppTheme.primaryColor),
+                          label: Text(context.translate('system_configuration'), style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            side: const BorderSide(color: AppTheme.primaryColor),
+                            foregroundColor: AppTheme.primaryColor,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -119,9 +129,9 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey[700]),
+          Icon(icon, size: 18, color: Colors.white70),
           const SizedBox(width: 8),
-          Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+          Text(title, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
         ],
       ),
     );
@@ -135,22 +145,22 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isSafe ? Colors.green[50] : Colors.red[50],
+        color: (isSafe ? Colors.green : Colors.red).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: (isSafe ? Colors.green : Colors.red).withValues(alpha: 0.2)),
+        border: Border.all(color: (isSafe ? Colors.green : Colors.red).withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           Row(
             children: [
-              Icon(isSafe ? Icons.verified_user_rounded : Icons.report_problem_rounded, color: isSafe ? Colors.green : Colors.red),
+              Icon(isSafe ? Icons.verified_user_rounded : Icons.report_problem_rounded, color: isSafe ? Colors.greenAccent : Colors.redAccent),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(isSafe ? "SYSTEM INTEGRITY VERIFIED" : "TAMPER ALERT DETECTED", 
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSafe ? Colors.green : Colors.red, fontSize: 13)),
-                  Text("Cross-checked ${_tamperAlerts?['checked_count'] ?? 0} active loans", style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: isSafe ? Colors.greenAccent : Colors.redAccent, fontSize: 13)),
+                  Text("Cross-checked ${_tamperAlerts?['checked_count'] ?? 0} active loans", style: const TextStyle(fontSize: 10, color: Colors.white54)),
                 ],
               )
             ],
@@ -173,8 +183,12 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
     if (flags.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-        child: const Center(child: Text("No unusual role activity detected.", style: TextStyle(fontSize: 12, color: Colors.grey))),
+        decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05), 
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        ),
+        child: const Center(child: Text("No unusual role activity detected.", style: TextStyle(fontSize: 12, color: Colors.white54))),
       );
     }
     
@@ -182,21 +196,21 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
       children: flags.map((f) => Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.orange[50], borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: Colors.orangeAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("${f['user']} - ${f['type']}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text(f['warning'], style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text("${f['user']} - ${f['type']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+                  Text(f['warning'], style: const TextStyle(fontSize: 11, color: Colors.white70)),
                 ],
               ),
             ),
-            Text("${f['action_count']} acts", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.orange)),
+            Text("${f['action_count']} acts", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.orangeAccent)),
           ],
         ),
       )).toList(),
@@ -207,8 +221,12 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
     if (_deviceAlerts.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-        child: const Center(child: Text("All device logins appear legitimate.", style: TextStyle(fontSize: 12, color: Colors.grey))),
+        decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05))
+        ),
+        child: const Center(child: Text("All device logins appear legitimate.", style: TextStyle(fontSize: 12, color: Colors.white54))),
       );
     }
 
@@ -216,21 +234,21 @@ class _SecurityComplianceScreenState extends State<SecurityComplianceScreen> {
       children: _deviceAlerts.map((d) => Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
-            const Icon(Icons.phonelink_lock_rounded, color: Colors.red),
+            const Icon(Icons.phonelink_lock_rounded, color: Colors.redAccent),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(d['user'] ?? 'Unknown User', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  Text(d['risk'], style: const TextStyle(fontSize: 10, color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                  Text(d['user'] ?? 'Unknown User', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+                  Text(d['risk'], style: GoogleFonts.outfit(fontSize: 10, color: Colors.redAccent, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
-            Text("${d['device_count']} Devices", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.red)),
+            Text("${d['device_count']} Devices", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.redAccent)),
           ],
         ),
       )).toList(),

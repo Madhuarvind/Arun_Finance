@@ -84,28 +84,35 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF1E293B),
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            Text("Optimization Preview", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text("Optimization Preview", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 8),
-            const Text("AI suggesting optimal worker-customer distribution.", style: TextStyle(color: Colors.grey)),
+            Text("AI suggesting optimal worker-customer distribution.", style: GoogleFonts.outfit(color: Colors.white54)),
             const SizedBox(height: 24),
             Expanded(
               child: ListView.builder(
                 itemCount: _lastAssignments?.length ?? 0,
                 itemBuilder: (context, index) {
                   final assign = _lastAssignments![index];
-                  return ListTile(
-                    leading: const CircleAvatar(child: Icon(Icons.person)),
-                    title: Text("Worker ID: ${assign['worker_id']}"),
-                    subtitle: Text("${assign['count']} customers assigned"),
-                    trailing: const Icon(Icons.check_circle, color: Colors.green),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16)
+                    ),
+                    child: ListTile(
+                      leading: const CircleAvatar(backgroundColor: Colors.white10, child: Icon(Icons.person, color: Colors.white)),
+                      title: Text("Worker ID: ${assign['worker_id']}", style: GoogleFonts.outfit(color: Colors.white)),
+                      subtitle: Text("${assign['count']} customers assigned", style: GoogleFonts.outfit(color: Colors.white54)),
+                      trailing: const Icon(Icons.check_circle, color: Colors.greenAccent),
+                    ),
                   );
                 },
               ),
@@ -122,8 +129,10 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
                   backgroundColor: AppTheme.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shadowColor: AppTheme.primaryColor.withValues(alpha: 0.5),
+                  elevation: 8,
                 ),
-                child: const Text("Apply Assignments", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: Text("Apply Assignments", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -135,47 +144,59 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text("Resource Optimization", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text("Resource Optimization", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInsightCard(),
-                const SizedBox(height: 32),
-                _buildSectionTitle("AI Mathematical Engines"),
-                const SizedBox(height: 16),
-                _buildActionTile(
-                  "Optimal Workload Distribution",
-                  "Auto-assign customers to field agents using Integer Programming.",
-                  Icons.group_add_rounded,
-                  Colors.blue,
-                  _runAutoAssignment
-                ),
-                const SizedBox(height: 16),
-                _buildActionTile(
-                  "Capital Allocation Suggestion",
-                  "Optimize loan disbursement budget across areas (Linear Programming).",
-                  Icons.point_of_sale_rounded,
-                  Colors.green,
-                  _fetchBudgetSuggestion
-                ),
-                if (_budgetSuggestion != null) ...[
-                   const SizedBox(height: 32),
-                   _buildSectionTitle("Budget Suggestions"),
-                   const SizedBox(height: 16),
-                   _buildBudgetList(),
-                ]
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
           ),
+        ),
+        child: SafeArea(
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInsightCard(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle("AI Mathematical Engines"),
+                    const SizedBox(height: 16),
+                    _buildActionTile(
+                      "Optimal Workload Distribution",
+                      "Auto-assign customers to field agents using Integer Programming.",
+                      Icons.group_add_rounded,
+                      Colors.blueAccent,
+                      _runAutoAssignment
+                    ),
+                    const SizedBox(height: 16),
+                    _buildActionTile(
+                      "Capital Allocation Suggestion",
+                      "Optimize loan disbursement budget across areas (Linear Programming).",
+                      Icons.point_of_sale_rounded,
+                      Colors.greenAccent,
+                      _fetchBudgetSuggestion
+                    ),
+                    if (_budgetSuggestion != null) ...[
+                       const SizedBox(height: 32),
+                       _buildSectionTitle("Budget Suggestions"),
+                       const SizedBox(height: 16),
+                       _buildBudgetList(),
+                    ]
+                  ],
+                ),
+              ),
+        ),
+      ),
     );
   }
 
@@ -183,23 +204,37 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.indigo,
+        gradient: LinearGradient(colors: [Colors.indigo.shade900, Colors.indigo.shade800]),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: Colors.indigo.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8))],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.auto_graph_rounded, color: Colors.white, size: 32),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.auto_graph_rounded, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Operations Level",
+                style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           Text(
             "Operations Optimizer",
-            style: GoogleFonts.outfit(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: GoogleFonts.outfit(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             "Maximize ROI and collection efficiency using advanced constraints.",
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+            style: GoogleFonts.outfit(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
           ),
         ],
       ),
@@ -213,9 +248,9 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
@@ -229,13 +264,13 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(title, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(subtitle, style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
                 ],
               ),
             ),
-            const Icon(Icons.bolt_rounded, color: Colors.amber, size: 20),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 16),
           ],
         ),
       ),
@@ -247,13 +282,17 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
       children: _budgetSuggestion!.entries.map((e) => Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05))
+        ),
         child: Row(
           children: [
-            const CircleAvatar(backgroundColor: Colors.green, radius: 4),
+            CircleAvatar(backgroundColor: Colors.greenAccent.withValues(alpha: 0.8), radius: 4),
             const SizedBox(width: 12),
-            Expanded(child: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w500))),
-            Text("₹ ${e.value.toStringAsFixed(2)}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.green)),
+            Expanded(child: Text(e.key, style: GoogleFonts.outfit(fontWeight: FontWeight.w500, color: Colors.white))),
+            Text("₹ ${e.value.toStringAsFixed(2)}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.greenAccent)),
           ],
         ),
       )).toList(),
@@ -261,6 +300,6 @@ class _OptimizationDashboardState extends State<OptimizationDashboard> {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700], letterSpacing: 1.2));
+    return Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white54, letterSpacing: 1.2));
   }
 }

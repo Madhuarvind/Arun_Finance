@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:vasool_drive/widgets/add_customer_dialog.dart';
 import 'customer_detail_screen.dart';
 import '../line_report_screen.dart';
+import '../../utils/theme.dart';
 
 class LineCustomersScreen extends StatefulWidget {
   final Map<String, dynamic> line;
@@ -268,136 +269,153 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               widget.line['name'],
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 18),
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
             ),
             Text(
               AppLocalizations.of(context).translate('manage_customers'),
-              style: GoogleFonts.poppins(fontSize: 12),
+              style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _fetchData,
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                   const TabBar(
-                     labelColor: Colors.blue,
-                     unselectedLabelColor: Colors.grey,
-                     tabs: [
-                       Tab(text: "CUSTOMERS"),
-                       Tab(text: "REPORT"),
-                     ],
-                   ),
-                   Expanded(
-                     child: TabBarView(
-                       children: [
-                         _lineCustomers.isEmpty
-                             ? Center(
-                                 child: Column(
-                                   mainAxisAlignment: MainAxisAlignment.center,
-                                   children: [
-                                     const Icon(Icons.people_outline, size: 64, color: Colors.grey),
-                                     const SizedBox(height: 16),
-                                     Text(
-                                       AppLocalizations.of(context).translate('no_customers_found'),
-                                       style: GoogleFonts.poppins(color: Colors.grey),
-                                     ),
-                                     const SizedBox(height: 16),
-                                     ElevatedButton(
-                                       onPressed: _addCustomer,
-                                       child: Text(AppLocalizations.of(context).translate('add_customer')),
-                                     ),
-                                   ],
-                                 ),
-                               )
-                             : ReorderableListView.builder(
-                                 padding: const EdgeInsets.all(16),
-                                 itemCount: _lineCustomers.length,
-                                 onReorder: (oldIndex, newIndex) {
-                                   setState(() {
-                                     if (oldIndex < newIndex) {
-                                       newIndex -= 1;
-                                     }
-                                     final item = _lineCustomers.removeAt(oldIndex);
-                                     _lineCustomers.insert(newIndex, item);
-                                   });
-                                   _updateOrder();
-                                 },
-                                 itemBuilder: (context, index) {
-                                   final cust = _lineCustomers[index];
-                                   return Container(
-                                     key: ValueKey(cust['id'] ?? index),
-                                     margin: const EdgeInsets.only(bottom: 12),
-                                     decoration: BoxDecoration(
-                                       color: Colors.white,
-                                       borderRadius: BorderRadius.circular(32),
-                                       border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-                                     ),
-                                     child: ListTile(
-                                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                       leading: Wrap(
-                                         spacing: 8,
-                                         crossAxisAlignment: WrapCrossAlignment.center,
-                                         children: [
-                                           CircleAvatar(
-                                             backgroundColor: const Color(0xFFAEEA44), // Lime Green
-                                             foregroundColor: Colors.black,
-                                             radius: 20,
-                                             child: Text(
-                                               (index + 1).toString(),
-                                               style: const TextStyle(fontWeight: FontWeight.bold),
-                                             ),
-                                           ),
-                                           IconButton(
-                                             icon: const Icon(Icons.person_remove_rounded, color: Colors.redAccent, size: 20),
-                                             onPressed: () => _removeCustomer(cust['id'] ?? 0),
-                                             tooltip: "Remove from Line",
-                                           ),
-                                         ],
-                                       ),
-                                       title: Text(cust['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
-                                       subtitle: Text('${cust['mobile'] ?? 'No Mobile'} • ${cust['area'] ?? 'No Area'}', style: GoogleFonts.outfit(color: Colors.black54)),
-                                       trailing: const Icon(Icons.drag_handle, color: Colors.grey),
-                                       onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => CustomerDetailScreen(customerId: cust['id']),
-                                            ),
-                                          );
-                                       },
-                                     ),
-                                   );
-                                 },
-                               ),
-                         Padding(
-                           padding: const EdgeInsets.all(16.0),
-                           child: _buildReportTab(),
-                         ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                     const SizedBox(height: 100), // Spacing for AppBar
+                     const TabBar(
+                       labelColor: AppTheme.primaryColor,
+                       unselectedLabelColor: Colors.white60,
+                       indicatorColor: AppTheme.primaryColor,
+                       tabs: [
+                         Tab(text: "CUSTOMERS"),
+                         Tab(text: "REPORT"),
                        ],
                      ),
-                   ),
-                ],
+                     Expanded(
+                       child: TabBarView(
+                         children: [
+                           _lineCustomers.isEmpty
+                               ? Center(
+                                   child: Column(
+                                     mainAxisAlignment: MainAxisAlignment.center,
+                                     children: [
+                                       const Icon(Icons.people_outline, size: 64, color: Colors.white24),
+                                       const SizedBox(height: 16),
+                                       Text(
+                                         AppLocalizations.of(context).translate('no_customers_found'),
+                                         style: GoogleFonts.outfit(color: Colors.white54),
+                                       ),
+                                       const SizedBox(height: 16),
+                                       ElevatedButton(
+                                         onPressed: _addCustomer,
+                                         style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.black),
+                                         child: Text(AppLocalizations.of(context).translate('add_customer'), style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                                       ),
+                                     ],
+                                   ),
+                                 )
+                               : ReorderableListView.builder(
+                                   padding: const EdgeInsets.all(16),
+                                   itemCount: _lineCustomers.length,
+                                   onReorder: (oldIndex, newIndex) {
+                                     setState(() {
+                                       if (oldIndex < newIndex) {
+                                         newIndex -= 1;
+                                       }
+                                       final item = _lineCustomers.removeAt(oldIndex);
+                                       _lineCustomers.insert(newIndex, item);
+                                     });
+                                     _updateOrder();
+                                   },
+                                   itemBuilder: (context, index) {
+                                     final cust = _lineCustomers[index];
+                                     return Container(
+                                       key: ValueKey(cust['id'] ?? index),
+                                       margin: const EdgeInsets.only(bottom: 12),
+                                       decoration: BoxDecoration(
+                                         color: Colors.white.withValues(alpha: 0.05),
+                                         borderRadius: BorderRadius.circular(16),
+                                         border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                                       ),
+                                       child: ListTile(
+                                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                         leading: Wrap(
+                                           spacing: 8,
+                                           crossAxisAlignment: WrapCrossAlignment.center,
+                                           children: [
+                                             CircleAvatar(
+                                               backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2), 
+                                               foregroundColor: AppTheme.primaryColor,
+                                               radius: 20,
+                                               child: Text(
+                                                 (index + 1).toString(),
+                                                 style: const TextStyle(fontWeight: FontWeight.bold),
+                                               ),
+                                             ),
+                                             IconButton(
+                                               icon: const Icon(Icons.person_remove_rounded, color: Colors.redAccent, size: 20),
+                                               onPressed: () => _removeCustomer(cust['id'] ?? 0),
+                                               tooltip: "Remove from Line",
+                                             ),
+                                           ],
+                                         ),
+                                         title: Text(cust['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                                         subtitle: Text('${cust['mobile'] ?? 'No Mobile'} • ${cust['area'] ?? 'No Area'}', style: GoogleFonts.outfit(color: Colors.white54)),
+                                         trailing: const Icon(Icons.drag_handle, color: Colors.white24),
+                                         onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => CustomerDetailScreen(customerId: cust['id']),
+                                              ),
+                                            );
+                                         },
+                                       ),
+                                     );
+                                   },
+                                 ),
+                           Padding(
+                             padding: const EdgeInsets.all(16.0),
+                             child: _buildReportTab(),
+                           ),
+                         ],
+                       ),
+                     ),
+                  ],
+                ),
               ),
-            ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addCustomer,
-        child: const Icon(Icons.person_add),
+        backgroundColor: AppTheme.primaryColor,
+        child: const Icon(Icons.person_add, color: Colors.black),
       ),
     );
   }
@@ -413,23 +431,23 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Column(
               children: [
-                _buildSummaryRow("Total Collected", "₹$_totalCollected", icon: Icons.payments_rounded, color: Colors.green),
-                const Divider(height: 24),
+                _buildSummaryRow("Total Collected", "₹$_totalCollected", icon: Icons.payments_rounded, color: Colors.greenAccent),
+                Divider(height: 24, color: Colors.white.withValues(alpha: 0.1)),
                 Row(
                   children: [
-                    Expanded(child: _buildSimpleTally("Cash", "₹$_totalCash", Icons.money_rounded, Colors.orange)),
-                    Container(width: 1, height: 40, color: Colors.grey.withValues(alpha: 0.2)),
-                    Expanded(child: _buildSimpleTally("UPI", "₹$_totalUpi", Icons.account_balance_rounded, Colors.indigo)),
+                    Expanded(child: _buildSimpleTally("Cash", "₹$_totalCash", Icons.money_rounded, Colors.orangeAccent)),
+                    Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.1)),
+                    Expanded(child: _buildSimpleTally("UPI", "₹$_totalUpi", Icons.account_balance_rounded, Colors.indigoAccent)),
                   ],
                 ),
-                const Divider(height: 24),
-                _buildSummaryRow("Coverage", "$paidCount / $totalCustomers Customers", icon: Icons.people_rounded, color: Colors.blue),
+                Divider(height: 24, color: Colors.white.withValues(alpha: 0.1)),
+                _buildSummaryRow("Coverage", "$paidCount / $totalCustomers Customers", icon: Icons.people_rounded, color: Colors.blueAccent),
               ],
             ),
           ),
@@ -437,7 +455,7 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Route Breakdown", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text("Route Breakdown", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
               _buildReportActions(),
             ],
           ),

@@ -77,7 +77,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       builder: (context, languageProvider, child) {
         return Scaffold(
           body: Container(
-            color: AppTheme.backgroundColor,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
             child: SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
@@ -85,78 +91,121 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, color: AppTheme.textColor),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 20),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 60),
+                    Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(colors: [AppTheme.primaryColor, Color(0xFFD4FF8B)]),
+                              boxShadow: [
+                                 BoxShadow(color: AppTheme.primaryColor.withValues(alpha: 0.2), blurRadius: 30, spreadRadius: 5)
+                              ]
+                            ),
+                            child: CircleAvatar(
+                              radius: 54,
+                              backgroundColor: Colors.white,
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                backgroundImage: const AssetImage('assets/logo.png'),
+                                onBackgroundImageError: (exception, stackTrace) => const Icon(Icons.shield_rounded, color: AppTheme.primaryColor, size: 40),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          Text(
+                            context.translate('admin_login'),
+                            style: GoogleFonts.outfit(
+                              fontSize: 42,
+                              fontWeight: FontWeight.w900,
+                              height: 1.1,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.translate('admin_auth_subtitle'),
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF94A3B8), 
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 48),
                     Container(
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                           BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, spreadRadius: 2)
-                        ]
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                       ),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white,
-                        backgroundImage: const AssetImage('assets/logo.png'),
-                        onBackgroundImageError: (_, __) => const Icon(Icons.error),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      context.translate('admin_login'),
-                      style: GoogleFonts.outfit(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                        color: AppTheme.textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      context.translate('admin_auth_subtitle'),
-                      style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 16),
-                    ),
-                    const SizedBox(height: 48),
-                    TextField(
-                      controller: _usernameController,
-                      textInputAction: TextInputAction.next,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                      decoration: InputDecoration(
-                        labelText: context.translate('username'),
-                        prefixIcon: const Icon(Icons.person_outline_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _handleAdminLogin(),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor),
-                      decoration: InputDecoration(
-                        labelText: context.translate('password'),
-                        prefixIcon: const Icon(Icons.lock_outline_rounded),
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _usernameController,
+                            textInputAction: TextInputAction.next,
+                            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: context.translate('username'),
+                              labelStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                              prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF94A3B8)),
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.05),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _handleAdminLogin(),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            decoration: InputDecoration(
+                              labelText: context.translate('password'),
+                              labelStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                              prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF94A3B8)),
+                              filled: true,
+                              fillColor: Colors.white.withValues(alpha: 0.05),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleAdminLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 22),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          elevation: 10,
+                          shadowColor: AppTheme.primaryColor.withValues(alpha: 0.3),
                         ),
                         child: _isLoading 
                           ? const CircularProgressIndicator(color: Colors.black)
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(context.translate('login'), style: const TextStyle(fontSize: 20)),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.shield_outlined, size: 24),
+                                Text(
+                                  context.translate('login').toUpperCase(), 
+                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1)
+                                ),
+                                const SizedBox(width: 12),
+                                const Icon(Icons.shield_rounded, size: 24),
                               ],
                             ),
                       ),

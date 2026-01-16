@@ -4,6 +4,7 @@ import '../services/language_service.dart';
 import '../utils/localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -37,47 +38,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
-          backgroundColor: Colors.white,
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
               context.translate('settings'),
               style: GoogleFonts.outfit(
-                color: Colors.black,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
               ),
             ),
           ),
-          body: _isLoading 
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+              ),
+            ),
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+              padding: const EdgeInsets.only(top: kToolbarHeight + 40, left: 24, right: 24, bottom: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   context.translate('select_language'),
                   style: GoogleFonts.outfit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF64748B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.primaryColor,
+                    letterSpacing: 1.5,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  "Change application appearance language",
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 
                 // Tamil Card
                 _buildLanguageCard(
@@ -101,13 +103,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 16),
 
                 if (_role != null) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
+                  Text(
+                    "ACCOUNT & SECURITY",
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white24,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   _buildActionCard(
                     context,
                     "Security Hub",
-                    "Manage your biometric and login security",
-                    Icons.security,
-                    const Color(0xFFEFF6FF),
+                    "MANAGE BIOMETRICS & PIN",
+                    Icons.security_rounded,
                     const Color(0xFF3B82F6),
                     () => Navigator.pushNamed(context, '/security')
                   ),
@@ -117,15 +128,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 16),
                   _buildActionCard(
                     context,
-                    "Administrative Configuration",
-                    "Manage global interest rates, UPI, and permissions",
+                    "Admin Config",
+                    "INTEREST, UPI & PERMISSIONS",
                     Icons.settings_suggest_rounded,
-                    const Color(0xFFF0FDF4),
                     const Color(0xFF16A34A),
                     () => Navigator.pushNamed(context, '/admin/master_settings')
                   ),
                 ],
               ],
+            ),
             ),
           ),
         );
@@ -135,7 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildLanguageCard(BuildContext context, String code, String name, String flag, LanguageProvider provider) {
     final isSelected = provider.currentLocale.languageCode == code;
-    final borderColor = isSelected ? const Color(0xFFB4F23E) : Colors.black;
+    final borderColor = isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05);
     
     return InkWell(
       onTap: () => provider.setLanguage(code),
@@ -144,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         height: 80,
         padding: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSelected ? AppTheme.primaryColor.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: borderColor, width: 2),
         ),
@@ -156,14 +167,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Text(
                 name,
                 style: GoogleFonts.outfit(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? const Color(0xFFB4F23E) : Colors.black,
+                  color: isSelected ? AppTheme.primaryColor : Colors.white70,
                 ),
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check_circle, color: Color(0xFFB4F23E), size: 24),
+              Icon(Icons.check_circle_rounded, color: AppTheme.primaryColor, size: 24),
           ],
         ),
       ),
@@ -175,7 +186,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String title, 
     String subtitle, 
     IconData icon, 
-    Color iconBg, 
     Color iconColor,
     VoidCallback onTap
   ) {
@@ -185,16 +195,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.black, width: 2),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: iconBg,
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: iconColor, size: 24),
@@ -207,22 +217,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: GoogleFonts.outfit(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: Colors.white,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      color: const Color(0xFF64748B),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white24,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.black, size: 20),
+            const Icon(Icons.chevron_right_rounded, color: Colors.white24, size: 20),
           ],
         ),
       ),

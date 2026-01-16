@@ -64,13 +64,16 @@ class _CollectionLedgerScreenState extends State<CollectionLedgerScreen> with Si
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('Collection Ledger', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text('Collection Ledger', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: Colors.white60,
           indicatorColor: AppTheme.primaryColor,
           tabs: const [
             Tab(text: "Collection Log"),
@@ -78,15 +81,24 @@ class _CollectionLedgerScreenState extends State<CollectionLedgerScreen> with Si
           ],
         ),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : TabBarView(
-            controller: _tabController,
-            children: [
-              _buildLogTab(),
-              _buildWorkTab(),
-            ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
           ),
+        ),
+        child: _isLoading 
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildLogTab(),
+                _buildWorkTab(),
+              ],
+            ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _fetchData,
         backgroundColor: AppTheme.primaryColor,
@@ -96,33 +108,43 @@ class _CollectionLedgerScreenState extends State<CollectionLedgerScreen> with Si
   }
 
   Widget _buildLogTab() {
-    if (_logs.isEmpty) return const Center(child: Text("No collections recorded today"));
+    if (_logs.isEmpty) return Center(child: Text("No collections recorded today", style: GoogleFonts.outfit(color: Colors.white70)));
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 20, left: 16, right: 16, bottom: 80),
       itemCount: _logs.length,
       itemBuilder: (context, index) {
         final collection = _logs[index];
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
           child: ListTile(
-            leading: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  collection['payment_mode'] == 'cash' ? Icons.payments_outlined : Icons.account_balance_wallet_outlined,
-                  color: AppTheme.primaryColor,
-                ),
-                Text((collection['payment_mode']?.toString() ?? 'Unknown').toUpperCase(), style: const TextStyle(fontSize: 8)),
-              ],
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                collection['payment_mode'] == 'cash' ? Icons.payments_outlined : Icons.account_balance_wallet_outlined,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
             ),
-            title: Text(collection['customer_name']?.toString() ?? 'Unknown Name', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text("${collection['agent_name']?.toString() ?? 'Unknown Agent'} • ${collection['loan_id']?.toString() ?? 'N/A'}"),
+            title: Text(collection['customer_name']?.toString() ?? 'Unknown Name', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+            subtitle: Text(
+              "${collection['agent_name']?.toString() ?? 'Unknown Agent'} • ${collection['loan_id']?.toString() ?? 'N/A'}",
+              style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12),
+            ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text("₹${collection['amount']?.toString() ?? '0'}", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green)),
-                Text(_formatTime(collection['time']?.toString() ?? ''), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                Text("₹${collection['amount']?.toString() ?? '0'}", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                Text(_formatTime(collection['time']?.toString() ?? ''), style: GoogleFonts.outfit(fontSize: 10, color: Colors.white30)),
               ],
             ),
           ),
@@ -132,16 +154,21 @@ class _CollectionLedgerScreenState extends State<CollectionLedgerScreen> with Si
   }
 
   Widget _buildWorkTab() {
-    if (_targets.isEmpty) return const Center(child: Text("All targets for today completed!"));
+    if (_targets.isEmpty) return Center(child: Text("All targets for today completed!", style: GoogleFonts.outfit(color: Colors.white70)));
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 20, left: 16, right: 16, bottom: 80),
       itemCount: _targets.length,
       itemBuilder: (context, index) {
         final target = _targets[index];
         final bool isOverdue = target['is_overdue'] ?? false;
         
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+          ),
           child: ListTile(
             leading: Container(
               padding: const EdgeInsets.all(10),
@@ -149,16 +176,22 @@ class _CollectionLedgerScreenState extends State<CollectionLedgerScreen> with Si
                 color: (isOverdue ? Colors.red : Colors.blue).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(isOverdue ? Icons.priority_high : Icons.today, color: isOverdue ? Colors.red : Colors.blue, size: 20),
+              child: Icon(isOverdue ? Icons.priority_high : Icons.today, color: isOverdue ? Colors.redAccent : Colors.blueAccent, size: 20),
             ),
-            title: Text(target['customer_name']?.toString() ?? 'Unknown Name', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text("${target['area']?.toString() ?? 'N/A'} • ${target['agent_name']?.toString() ?? 'Unknown Agent'}"),
+            title: Text(target['customer_name']?.toString() ?? 'Unknown Name', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+            subtitle: Text(
+              "${target['area']?.toString() ?? 'N/A'} • ${target['agent_name']?.toString() ?? 'Unknown Agent'}",
+              style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)
+            ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text("₹${target['amount_due']?.toString() ?? '0'}", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(isOverdue ? "OVERDUE" : "DUE TODAY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isOverdue ? Colors.red : Colors.blue)),
+                Text("₹${target['amount_due']?.toString() ?? '0'}", style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                Text(
+                  isOverdue ? "OVERDUE" : "DUE TODAY",
+                  style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: isOverdue ? Colors.redAccent : Colors.blueAccent)
+                ),
               ],
             ),
           ),

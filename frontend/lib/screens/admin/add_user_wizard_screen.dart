@@ -150,12 +150,14 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white70),
         title: Text(
           'Add New User',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
       body: Column(
@@ -173,7 +175,7 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
                     decoration: BoxDecoration(
                       color: index <= _currentStep
                           ? AppTheme.primaryColor
-                          : Colors.grey.shade300,
+                          : Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -204,7 +206,7 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
                 const SizedBox(width: 12),
                 Text(
                   _stepTitles[_currentStep],
-                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
             ),
@@ -237,7 +239,9 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
                       onPressed: _previousStep,
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: AppTheme.primaryColor),
+                        side: BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.5)),
+                        foregroundColor: AppTheme.primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       child: const Text('Back'),
                     ),
@@ -251,6 +255,8 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
                     ),
                     child: _isLoading
                         ? const SizedBox(
@@ -258,7 +264,7 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                           )
-                        : Text(_currentStep == 3 ? 'Create User' : 'Next'),
+                        : Text(_currentStep == 3 ? 'Create User'.toUpperCase() : 'Next'.toUpperCase(), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1)),
                   ),
                 ),
               ],
@@ -277,11 +283,16 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
         children: [
           TextField(
             controller: _nameController,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Full Name *',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Enter full name',
-              prefixIcon: const Icon(Icons.person_outline),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.person_outline, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
           ),
           const SizedBox(height: 16),
@@ -289,20 +300,31 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
             controller: _mobileController,
             keyboardType: TextInputType.phone,
             maxLength: 10,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Mobile Number *',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Enter 10-digit mobile',
-              prefixIcon: const Icon(Icons.phone_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.phone_outlined, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+              counterStyle: const TextStyle(color: Colors.white38),
             ),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _selectedRole,
+            dropdownColor: const Color(0xFF1E293B),
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Role',
-              prefixIcon: const Icon(Icons.badge_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              labelStyle: const TextStyle(color: Colors.white60),
+              prefixIcon: const Icon(Icons.badge_outlined, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
             items: const [
               DropdownMenuItem(value: 'field_agent', child: Text('Field Agent')),
@@ -329,32 +351,47 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
         children: [
           TextField(
             controller: _areaController,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Area *',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Enter area/locality',
-              prefixIcon: const Icon(Icons.location_on_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _addressController,
             maxLines: 3,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Full Address',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Enter complete address',
-              prefixIcon: const Icon(Icons.home_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.home_outlined, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _idProofController,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'ID Proof',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Aadhar/PAN/Driving License',
-              prefixIcon: const Icon(Icons.credit_card_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.credit_card_outlined, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             ),
           ),
         ],
@@ -370,7 +407,7 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
         children: [
           Text(
             'Set a 4-digit PIN for login',
-            style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 14),
+            style: GoogleFonts.outfit(color: Colors.white54, fontSize: 14),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -378,11 +415,17 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
             obscureText: true,
             keyboardType: TextInputType.number,
             maxLength: 4,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'PIN *',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Enter 4-digit PIN',
-              prefixIcon: const Icon(Icons.lock_outline),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+              counterStyle: const TextStyle(color: Colors.white38),
             ),
           ),
           const SizedBox(height: 16),
@@ -391,11 +434,17 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
             obscureText: true,
             keyboardType: TextInputType.number,
             maxLength: 4,
+            style: GoogleFonts.outfit(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Confirm PIN *',
+              labelStyle: const TextStyle(color: Colors.white60),
               hintText: 'Re-enter PIN',
-              prefixIcon: const Icon(Icons.lock_outline),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: const TextStyle(color: Colors.white24),
+              prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.05),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+              counterStyle: const TextStyle(color: Colors.white38),
             ),
           ),
         ],
@@ -411,7 +460,7 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
         children: [
           Text(
             'Review Information',
-            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
+            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
           ),
           const SizedBox(height: 16),
           _buildReviewItem('Name', _nameController.text),
@@ -433,17 +482,17 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '$label:',
-            style: TextStyle(
-              color: AppTheme.secondaryTextColor,
+            style: GoogleFonts.outfit(
+              color: AppTheme.primaryColor,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -452,8 +501,8 @@ class _AddUserWizardScreenState extends State<AddUserWizardScreen> {
           Expanded(
             child: Text(
               value.isEmpty ? 'Not provided' : value,
-              style: TextStyle(
-                color: AppTheme.textColor,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
                 fontSize: 14,
               ),
             ),

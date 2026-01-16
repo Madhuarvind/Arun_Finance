@@ -123,10 +123,10 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
         return Scaffold(
           body: Container(
             decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0.0, -0.6),
-                radius: 1.2,
-                colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
               ),
             ),
             child: SafeArea(
@@ -137,73 +137,84 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
                   children: [
                     const SizedBox(height: 60),
                     Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
+                        gradient: LinearGradient(colors: [AppTheme.primaryColor, Color(0xFFD4FF8B)]),
                       ),
-                      child: const Icon(Icons.lock_person_outlined, size: 48, color: AppTheme.primaryColor),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF0F172A),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.lock_person_outlined, size: 48, color: AppTheme.primaryColor),
+                      ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 40),
                     Text(
                       context.translate('welcome'),
-                      style: const TextStyle(color: Colors.white54, fontSize: 18),
+                      style: GoogleFonts.outfit(color: Colors.white54, fontSize: 18),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       name,
                       style: GoogleFonts.outfit(
-                        fontSize: 28,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 60),
+                    Text(
+                      context.translate('enter_pin'),
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 48),
-                    Text(
-                      context.translate('enter_pin'),
-                      style: GoogleFonts.outfit(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     PinCodeTextField(
                       appContext: context,
                       length: 4,
                       controller: _pinController,
                       obscureText: true,
                       keyboardType: TextInputType.number,
-                      animationType: AnimationType.fade,
-                      textStyle: const TextStyle(color: AppTheme.primaryColor, fontSize: 24, fontWeight: FontWeight.bold),
+                      animationType: AnimationType.scale,
+                      textStyle: GoogleFonts.outfit(color: AppTheme.primaryColor, fontSize: 32, fontWeight: FontWeight.bold),
                       pinTheme: PinTheme(
                         shape: PinCodeFieldShape.box,
                         borderRadius: BorderRadius.circular(16),
-                        fieldHeight: 70,
-                        fieldWidth: 70,
-                        activeFillColor: AppTheme.surfaceColor,
-                        selectedFillColor: AppTheme.surfaceColor,
-                        inactiveFillColor: AppTheme.surfaceColor,
+                        fieldHeight: 64,
+                        fieldWidth: 64,
+                        activeFillColor: Colors.white.withValues(alpha: 0.1),
+                        selectedFillColor: Colors.white.withValues(alpha: 0.1),
+                        inactiveFillColor: Colors.white.withValues(alpha: 0.03),
                         activeColor: AppTheme.primaryColor,
-                        selectedColor: AppTheme.primaryColor,
-                        inactiveColor: const Color(0xFF2A2A2A),
-                        borderWidth: 2,
+                        selectedColor: AppTheme.primaryColor.withValues(alpha: 0.5),
+                        inactiveColor: Colors.white.withValues(alpha: 0.1),
+                        borderWidth: 1.5,
                       ),
                       enableActiveFill: true,
                       onChanged: (value) {},
                       onCompleted: (value) {
-                        _handleLogin(name);
+                         _handleLogin(name);
                       },
+                      cursorColor: AppTheme.primaryColor,
+                      animationDuration: const Duration(milliseconds: 300),
                     ),
                     const SizedBox(height: 48),
                     if (_isLoading)
                       const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
                     
                     const SizedBox(height: 40),
-                    TextButton(
+                    TextButton.icon(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(
+                      icon: const Icon(Icons.cached_rounded, size: 20, color: Colors.white38),
+                      label: Text(
                         context.translate('change'),
-                        style: const TextStyle(color: Colors.white38),
+                        style: GoogleFonts.outfit(color: Colors.white38, fontSize: 16),
                       ),
                     ),
                   ],

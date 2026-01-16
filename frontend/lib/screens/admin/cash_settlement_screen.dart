@@ -77,72 +77,75 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
           double system = (agent['system_cash'] as num).toDouble();
           double diff = (physical + expense) - system;
           
-          Color diffColor = Colors.green;
-          if (diff < 0) diffColor = Colors.red;
-          if (diff > 0) diffColor = Colors.blue;
+          Color diffColor = Colors.greenAccent;
+          if (diff < 0) diffColor = Colors.redAccent;
+          if (diff > 0) diffColor = Colors.blueAccent;
 
           return AlertDialog(
-            title: Text("Settle: ${agent['agent_name']}"),
+            backgroundColor: const Color(0xFF1E293B),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Text("Settle: ${agent['agent_name']}", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    Container(
-                     padding: const EdgeInsets.all(12),
-                     decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                     padding: const EdgeInsets.all(16),
+                     decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
                      child: Row(
                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                        children: [
-                         const Text("System Total (Cash):"),
-                         Text("₹$system", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                         Text("System Total (Cash):", style: GoogleFonts.outfit(color: Colors.white70)),
+                         Text("₹$system", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
                        ],
                      ),
                    ),
-                   const SizedBox(height: 16),
-                   TextField(
-                     controller: physicalCtrl,
-                     keyboardType: TextInputType.number,
-                     decoration: const InputDecoration(labelText: "Physical Cash Received", border: OutlineInputBorder()),
-                     onChanged: (v) => setDialogState(() {}),
-                   ),
+                   const SizedBox(height: 20),
+                   _buildTextField("Physical Cash Received", physicalCtrl, setDialogState),
                    const SizedBox(height: 12),
-                   TextField(
-                     controller: expensesCtrl,
-                     keyboardType: TextInputType.number,
-                     decoration: const InputDecoration(labelText: "Expenses (Snacks/Petrol)", border: OutlineInputBorder()),
-                     onChanged: (v) => setDialogState(() {}),
-                   ),
+                   _buildTextField("Expenses (Snacks/Petrol)", expensesCtrl, setDialogState),
                    const SizedBox(height: 12),
                    TextField(
                      controller: notesCtrl,
-                     decoration: const InputDecoration(labelText: "Notes", border: OutlineInputBorder()),
+                     style: GoogleFonts.outfit(color: Colors.white),
+                     decoration: InputDecoration(
+                       labelText: "Notes",
+                       labelStyle: const TextStyle(color: Colors.white54),
+                       filled: true,
+                       fillColor: Colors.white.withValues(alpha: 0.05),
+                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                     ),
                    ),
-                   const SizedBox(height: 20),
-                   const Divider(),
+                   const SizedBox(height: 24),
+                   Divider(color: Colors.white.withValues(alpha: 0.1)),
+                   const SizedBox(height: 12),
                    Row(
                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                      children: [
-                       const Text("Difference:", style: TextStyle(fontWeight: FontWeight.bold)),
+                       Text("Difference:", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
                        Text(
                          "₹${diff.toStringAsFixed(2)}", 
-                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: diffColor)
+                         style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20, color: diffColor)
                        ),
                      ],
                    ),
                    if (diff != 0)
                      Padding(
-                       padding: const EdgeInsets.only(top: 4.0),
+                       padding: const EdgeInsets.only(top: 8.0),
                        child: Text(
                          diff < 0 ? "Shortage of ₹${diff.abs().toStringAsFixed(2)}" : "Excess of ₹${diff.abs().toStringAsFixed(2)}",
-                         style: TextStyle(color: diffColor, fontSize: 12),
+                         style: GoogleFonts.outfit(color: diffColor, fontSize: 12, fontWeight: FontWeight.bold),
                        ),
                      )
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCEL")),
+              TextButton(
+                onPressed: () => Navigator.pop(context), 
+                child: Text("CANCEL", style: GoogleFonts.outfit(color: Colors.white54, fontWeight: FontWeight.bold))
+              ),
               ElevatedButton(
                 onPressed: () async {
                    final token = await _storage.read(key: 'jwt_token');
@@ -157,7 +160,13 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
                      _fetchData();
                    }
                 },
-                child: const Text("VERIFY & SAVE"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: Text("VERIFY & SAVE", style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
               )
             ],
           );
@@ -166,48 +175,78 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
     );
   }
 
+  Widget _buildTextField(String label, TextEditingController ctrl, StateSetter setState) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: TextInputType.number,
+      style: GoogleFonts.outfit(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white54),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.05),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.primaryColor)),
+      ),
+      onChanged: (v) => setState(() {}),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Shared Gradient background
+    final gradient = const BoxDecoration(
+      gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+      ),
+    );
+
     if (widget.isTab) {
       return DefaultTabController(
         length: 2,
-        child: Column(
-          children: [
-            Container(
-              color: Colors.white,
-              child: TabBar(
-                labelColor: AppTheme.primaryColor,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: AppTheme.primaryColor,
-                tabs: const [
-                  Tab(text: "Pending / Today"),
-                  Tab(text: "History"),
-                ],
+        child: Container(
+          decoration: gradient,
+          child: Column(
+            children: [
+              Container(
+                color: Colors.transparent,
+                child: TabBar(
+                  labelColor: AppTheme.primaryColor,
+                  unselectedLabelColor: Colors.white60,
+                  indicatorColor: AppTheme.primaryColor,
+                  tabs: const [
+                    Tab(text: "Pending / Today"),
+                    Tab(text: "History"),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _buildPendingList(),
-                  _buildHistoryList(),
-                ],
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildPendingList(),
+                    _buildHistoryList(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: Text('Daily Cash Settlement', style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.white,
-          iconTheme: const IconThemeData(color: Colors.black),
+          title: Text('Daily Cash Settlement', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.transparent,
           elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
           bottom: TabBar(
             labelColor: AppTheme.primaryColor,
-            unselectedLabelColor: Colors.grey,
+            unselectedLabelColor: Colors.white60,
             indicatorColor: AppTheme.primaryColor,
             tabs: const [
                Tab(text: "Pending / Today"),
@@ -215,44 +254,50 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-             _buildPendingList(),
-             _buildHistoryList(),
-          ],
+        body: Container(
+          decoration: gradient,
+          child: TabBarView(
+            children: [
+               _buildPendingList(),
+               _buildHistoryList(),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPendingList() {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_agents.isEmpty) return const Center(child: Text("No active agents found"));
-    final pendingAgents = _agents; // For now all agents for today are shown here
+    if (_isLoading) return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
+    if (_agents.isEmpty) return Center(child: Text("No active agents found", style: GoogleFonts.outfit(color: Colors.white70)));
+    final pendingAgents = _agents; 
     
     if (pendingAgents.isEmpty) {
        return Center(
          child: Column(
            mainAxisAlignment: MainAxisAlignment.center,
            children: [
-             Icon(Icons.check_circle_outline, size: 64, color: Colors.green.shade200),
+             Icon(Icons.check_circle_outline, size: 64, color: Colors.greenAccent.withValues(alpha: 0.5)),
              const SizedBox(height: 16),
-             Text("All Settled!", style: GoogleFonts.outfit(fontSize: 18, color: Colors.grey)),
+             Text("All Settled!", style: GoogleFonts.outfit(fontSize: 18, color: Colors.white54)),
            ],
          ),
        );
     }
 
     return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.only(top: 20, left: 16, right: 16, bottom: 80),
             itemCount: pendingAgents.length,
             itemBuilder: (ctx, i) {
               final agent = pendingAgents[i];
               final bool isVerified = agent['status'] == 'verified';
-              return Card(
+              return Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                ),
                 child: InkWell(
                   onTap: () => _openSettlementDialog(agent),
                   borderRadius: BorderRadius.circular(16),
@@ -265,16 +310,19 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
                           children: [
                             Row(
                               children: [
-                                CircleAvatar(child: Text(agent['agent_name'][0].toUpperCase())),
+                                CircleAvatar(
+                                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+                                  child: Text(agent['agent_name'][0].toUpperCase(), style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+                                ),
                                 const SizedBox(width: 12),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(agent['agent_name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text(agent['agent_name'], style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                                     if (isVerified)
-                                      const Text("Verified", style: TextStyle(color: Colors.green, fontSize: 12))
+                                      const Text("Verified", style: TextStyle(color: Colors.greenAccent, fontSize: 12))
                                     else
-                                      const Text("Pending", style: TextStyle(color: Colors.orange, fontSize: 12))
+                                      const Text("Pending", style: TextStyle(color: Colors.orangeAccent, fontSize: 12))
                                   ],
                                 ),
                               ],
@@ -282,12 +330,13 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text("System: ₹${agent['system_cash']}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text("System: ₹${agent['system_cash']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
                                 if (isVerified)
                                   Text("Diff: ₹${agent['difference']}", 
-                                    style: TextStyle(
-                                      color: (agent['difference'] as num) < 0 ? Colors.red : Colors.green, 
-                                      fontWeight: FontWeight.bold
+                                    style: GoogleFonts.outfit(
+                                      color: (agent['difference'] as num) < 0 ? Colors.redAccent : Colors.greenAccent, 
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12
                                     )
                                   ),
                               ],
@@ -295,12 +344,12 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
                           ],
                         ),
                         if (isVerified) ...[
-                          const Divider(),
+                          Divider(color: Colors.white.withValues(alpha: 0.1)),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Handover: ₹${agent['physical_cash']}", style: const TextStyle(fontSize: 12)),
-                              Text("Exp: ₹${agent['expenses']}", style: const TextStyle(fontSize: 12)),
+                              Text("Handover: ₹${agent['physical_cash']}", style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70)),
+                              Text("Exp: ₹${agent['expenses']}", style: GoogleFonts.outfit(fontSize: 12, color: Colors.white70)),
                             ],
                           )
                         ]
@@ -319,16 +368,16 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history_rounded, size: 64, color: Colors.grey.shade200),
+            Icon(Icons.history_rounded, size: 64, color: Colors.white24),
             const SizedBox(height: 16),
-            const Text("No past settlements found"),
+            Text("No past settlements found", style: GoogleFonts.outfit(color: Colors.white54)),
           ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 20, left: 16, right: 16, bottom: 80),
       itemCount: _history.length,
       itemBuilder: (ctx, i) {
         final item = _history[i];
@@ -338,9 +387,9 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Column(
             children: [
@@ -350,20 +399,20 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item['agent_name'] ?? 'Agent', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(item['date'] ?? '', style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 12)),
+                      Text(item['agent_name'] ?? 'Agent', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                      Text(item['date'] ?? '', style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
                     ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: diff == 0 ? Colors.green.shade50 : (diff < 0 ? Colors.red.shade50 : Colors.blue.shade50),
+                      color: diff == 0 ? Colors.green.withValues(alpha: 0.2) : (diff < 0 ? Colors.red.withValues(alpha: 0.2) : Colors.blue.withValues(alpha: 0.2)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       "₹$diff",
-                      style: TextStyle(
-                        color: diff == 0 ? Colors.green : (diff < 0 ? Colors.red : Colors.blue),
+                      style: GoogleFonts.outfit(
+                        color: diff == 0 ? Colors.greenAccent : (diff < 0 ? Colors.redAccent : Colors.blueAccent),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -371,7 +420,7 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              const Divider(height: 1),
+              Divider(height: 1, color: Colors.white.withValues(alpha: 0.1)),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -392,8 +441,8 @@ class _CashSettlementScreenState extends State<CashSettlementScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 10)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(label, style: GoogleFonts.outfit(color: Colors.white54, fontSize: 10)),
+        Text(value, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
       ],
     );
   }

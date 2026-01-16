@@ -161,23 +161,35 @@ class _LineReportScreenState extends State<LineReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('${widget.period == 'daily' ? 'Daily' : 'Weekly'} Line Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text('${widget.period == 'daily' ? 'Daily' : 'Weekly'} Line Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         actions: [
           if (!_isLoading && _reportData != null)
             IconButton(
-              icon: const Icon(Icons.print_rounded),
+              icon: const Icon(Icons.print_rounded, color: Colors.white),
               onPressed: _printReport,
               tooltip: 'Print Report',
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
-          : _reportData == null
-              ? const Center(child: Text('No data found'))
-              : _buildReportUI(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : _reportData == null
+                ? Center(child: Text('No data found', style: GoogleFonts.outfit(color: Colors.white70)))
+                : _buildReportUI(),
+      ),
     );
   }
 
@@ -186,7 +198,7 @@ class _LineReportScreenState extends State<LineReportScreen> {
     final details = (_reportData?['details'] as List<dynamic>?) ?? [];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(top: 100, left: 20, right: 20, bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -194,9 +206,10 @@ class _LineReportScreenState extends State<LineReportScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -204,14 +217,14 @@ class _LineReportScreenState extends State<LineReportScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_reportData!['line_name'] ?? 'Unknown Line', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text(_reportData!['line_name'] ?? 'Unknown Line', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
                     const SizedBox(height: 4),
-                    Text(DateFormat('dd MMMM yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                    Text(DateFormat('dd MMMM yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 13)),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
                   child: Text(widget.period.toUpperCase(), style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
               ],
@@ -224,20 +237,20 @@ class _LineReportScreenState extends State<LineReportScreen> {
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.8,
+            childAspectRatio: 1.6,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
             children: [
-              _buildTallyCard('Total Collected', '₹${summary['total_collected'] ?? 0}', Icons.payments_rounded, Colors.green),
-              _buildTallyCard('Paid / Total', '${summary['paid_customers'] ?? 0} / ${summary['total_customers'] ?? 0}', Icons.people_rounded, Colors.blue),
-              _buildTallyCard('Cash Total', '₹${summary['total_cash'] ?? 0}', Icons.money_rounded, Colors.orange),
-              _buildTallyCard('UPI Total', '₹${summary['total_upi'] ?? 0}', Icons.account_balance_rounded, Colors.indigo),
+              _buildTallyCard('Total Collected', '₹${summary['total_collected'] ?? 0}', Icons.payments_rounded, Colors.greenAccent),
+              _buildTallyCard('Paid / Total', '${summary['paid_customers'] ?? 0} / ${summary['total_customers'] ?? 0}', Icons.people_rounded, Colors.blueAccent),
+              _buildTallyCard('Cash Total', '₹${summary['total_cash'] ?? 0}', Icons.money_rounded, Colors.orangeAccent),
+              _buildTallyCard('UPI Total', '₹${summary['total_upi'] ?? 0}', Icons.account_balance_rounded, Colors.indigoAccent),
             ],
           ),
           const SizedBox(height: 32),
 
           // Customer List
-          Text('Customer Breakdown', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Customer Breakdown', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 16),
           ListView.builder(
             shrinkWrap: true,
@@ -250,9 +263,9 @@ class _LineReportScreenState extends State<LineReportScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Row(
                   children: [
@@ -260,25 +273,25 @@ class _LineReportScreenState extends State<LineReportScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: (isPaid ? Colors.green : Colors.grey).withValues(alpha: 0.1),
+                        color: (isPaid ? Colors.green : Colors.grey).withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(isPaid ? Icons.check_circle_rounded : Icons.pending_rounded, color: isPaid ? Colors.green : Colors.grey, size: 20),
+                      child: Icon(isPaid ? Icons.check_circle_rounded : Icons.pending_rounded, color: isPaid ? Colors.greenAccent : Colors.white54, size: 20),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                            Text(d['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                            Text(d['customer_id'] ?? '-', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                            Text(d['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+                            Text(d['customer_id'] ?? '-', style: const TextStyle(color: Colors.white54, fontSize: 11)),
                         ],
                       ),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                          Text('₹${d['amount'] ?? 0}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isPaid ? Colors.black : Colors.grey)),
+                          Text('₹${d['amount'] ?? 0}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16, color: isPaid ? Colors.white : Colors.white54)),
                         if (isPaid)
                           Text((d['modes'] as List? ?? []).join(', ').toUpperCase(), style: const TextStyle(fontSize: 10, color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
                       ],
@@ -298,9 +311,9 @@ class _LineReportScreenState extends State<LineReportScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,13 +321,13 @@ class _LineReportScreenState extends State<LineReportScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 16),
+              Icon(icon, color: color, size: 18),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              Expanded(child: Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11), overflow: TextOverflow.ellipsis)),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 8),
+          Text(value, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
         ],
       ),
     );

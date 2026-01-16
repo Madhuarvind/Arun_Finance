@@ -352,17 +352,19 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         return Scaffold(
+          backgroundColor: const Color(0xFF0F172A),
           appBar: AppBar(
             elevation: 0,
             backgroundColor: Colors.transparent,
+            iconTheme: const IconThemeData(color: Colors.white70),
             title: _selectionMode
               ? Text(
                   '${_selectedUserIds.length} ${context.translate('selected')}',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
                 )
               : Text(
                   context.translate('user_management'),
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white),
                 ),
             actions: _selectionMode
               ? [
@@ -410,14 +412,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 child: Container(
                   height: 55,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      Icon(Icons.search_rounded, color: AppTheme.secondaryTextColor.withValues(alpha: 0.5)),
+                      Icon(Icons.search_rounded, color: Colors.white54),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
@@ -425,8 +427,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             _searchQuery = value;
                             _applyFilters();
                           },
+                          style: GoogleFonts.outfit(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: context.translate('search_users'),
+                            hintStyle: const TextStyle(color: Colors.white24),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
@@ -441,7 +445,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: (_filterRole != 'all' || _filterStatus != 'all' || _filterBiometric != 'all') 
-                              ? AppTheme.primaryColor.withValues(alpha: 0.1) 
+                              ? AppTheme.primaryColor.withValues(alpha: 0.2) 
                               : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -449,7 +453,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             Icons.tune_rounded, 
                             color: (_filterRole != 'all' || _filterStatus != 'all' || _filterBiometric != 'all') 
                               ? AppTheme.primaryColor 
-                              : AppTheme.secondaryTextColor.withValues(alpha: 0.5), 
+                              : Colors.white54, 
                             size: 20
                           ),
                         ),
@@ -466,7 +470,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   children: [
                     Text(
                       '${_filteredUsers.length} ${context.translate('users')}',
-                      style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 13, fontWeight: FontWeight.w500),
+                      style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13, fontWeight: FontWeight.w500),
                     ),
                     const Spacer(),
                     GestureDetector(
@@ -485,9 +489,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: _sortBy,
+                      dropdownColor: const Color(0xFF1E293B),
                       underline: const SizedBox(),
-                      icon: Icon(Icons.sort_rounded, size: 18, color: AppTheme.secondaryTextColor),
-                      style: TextStyle(color: AppTheme.textColor, fontSize: 13),
+                      icon: const Icon(Icons.sort_rounded, size: 18, color: Colors.white60),
+                      style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
                       items: const [
                         DropdownMenuItem(value: 'name', child: Text('Name')),
                         DropdownMenuItem(value: 'role', child: Text('Role')),
@@ -523,12 +528,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         decoration: BoxDecoration(
                           color: _selectedUserIds.contains(user['id']) 
                             ? AppTheme.primaryColor.withValues(alpha: 0.1) 
-                            : Colors.white,
+                            : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
                             color: _selectedUserIds.contains(user['id']) 
                               ? AppTheme.primaryColor 
-                              : Colors.black.withValues(alpha: 0.04),
+                              : Colors.white.withValues(alpha: 0.05),
                             width: _selectedUserIds.contains(user['id']) ? 2 : 1,
                           ),
                         ),
@@ -562,34 +567,36 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 value: _selectedUserIds.contains(user['id']),
                                 onChanged: (_) => _toggleSelection(user['id']),
                                 activeColor: AppTheme.primaryColor,
+                                side: const BorderSide(color: Colors.white30),
                               )
                             : Container(
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: AppTheme.backgroundColor,
+                              color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Icon(
                               user['role'] == 'admin' ? Icons.shield_outlined : Icons.person_outline_rounded,
-                              color: isActive ? AppTheme.primaryColor : AppTheme.secondaryTextColor,
+                              color: isActive ? AppTheme.primaryColor : Colors.white24,
                               size: 28,
                             ),
                           ),
                           title: Text(
                             user['name'] ?? user['username'] ?? 'Unknown User',
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17, color: AppTheme.textColor),
+                            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white),
                           ),
                           subtitle: Text(
                             '${user['area'] ?? context.translate('no_area')} • ${user['mobile_number'] ?? 'N/A'}',
-                            style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 13),
+                            style: GoogleFonts.outfit(color: Colors.white60, fontSize: 13),
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (!_selectionMode)
                                 PopupMenuButton<String>(
-                                  icon: Icon(Icons.more_vert, color: AppTheme.secondaryTextColor.withValues(alpha: 0.5)),
+                                  icon: const Icon(Icons.more_vert, color: Colors.white30),
+                                  color: const Color(0xFF1E293B),
                                   onSelected: (value) {
                                     if (value == 'view') {
                                       Navigator.push(
@@ -610,9 +617,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                       value: 'view',
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.visibility_outlined, size: 20),
+                                          const Icon(Icons.visibility_outlined, size: 20, color: Colors.white70),
                                           const SizedBox(width: 12),
-                                          Text(context.translate('view_details')),
+                                          Text(context.translate('view_details'), style: const TextStyle(color: Colors.white70)),
                                         ],
                                       ),
                                     ),
@@ -620,9 +627,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                       value: 'toggle',
                                       child: Row(
                                         children: [
-                                          Icon(isActive ? Icons.block : Icons.check_circle_outline, size: 20),
+                                          Icon(isActive ? Icons.block : Icons.check_circle_outline, size: 20, color: Colors.white70),
                                           const SizedBox(width: 12),
-                                          Text(isActive ? context.translate('deactivate') : context.translate('activate')),
+                                          Text(isActive ? context.translate('deactivate') : context.translate('activate'), style: const TextStyle(color: Colors.white70)),
                                         ],
                                       ),
                                     ),
@@ -630,9 +637,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                       value: 'delete',
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                                          const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
                                           const SizedBox(width: 12),
-                                          Text(context.translate('delete'), style: const TextStyle(color: Colors.red)),
+                                          Text(context.translate('delete'), style: const TextStyle(color: Colors.redAccent)),
                                         ],
                                       ),
                                     ),
@@ -642,10 +649,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               Switch(
                                 value: isActive,
                                 activeThumbColor: AppTheme.primaryColor,
+                                activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.3),
+                                inactiveThumbColor: Colors.white24,
+                                inactiveTrackColor: Colors.white10,
                                 onChanged: (value) => _toggleStatus(user['id'], isActive),
                               ),
                               const SizedBox(width: 4),
-                              Icon(Icons.chevron_right_rounded, color: AppTheme.secondaryTextColor.withValues(alpha: 0.3)),
+                              const Icon(Icons.chevron_right_rounded, color: Colors.white24),
                             ],
                           ),
                         ),
@@ -662,8 +672,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     context: context,
                     backgroundColor: Colors.transparent,
                     builder: (context) => Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFF0F172A),
                         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                       ),
                       padding: const EdgeInsets.all(24),
@@ -677,9 +687,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 color: Colors.green.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.check_circle, color: Colors.green),
+                              child: const Icon(Icons.check_circle_rounded, color: Colors.green),
                             ),
-                            title: const Text('Activate Selected'),
+                            title: Text('Activate Selected', style: GoogleFonts.outfit(color: Colors.white)),
                             onTap: () {
                               Navigator.pop(context);
                               _bulkActivate();
@@ -692,9 +702,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 color: Colors.orange.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.cancel, color: Colors.orange),
+                              child: const Icon(Icons.cancel_rounded, color: Colors.orange),
                             ),
-                            title: const Text('Deactivate Selected'),
+                            title: Text('Deactivate Selected', style: GoogleFonts.outfit(color: Colors.white)),
                             onTap: () {
                               Navigator.pop(context);
                               _bulkDeactivate();
@@ -707,9 +717,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                                 color: AppTheme.errorColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.delete_forever, color: AppTheme.errorColor),
+                              child: const Icon(Icons.delete_forever_rounded, color: AppTheme.errorColor),
                             ),
-                            title: Text('Delete Selected', style: TextStyle(color: AppTheme.errorColor)),
+                            title: Text('Delete Selected', style: GoogleFonts.outfit(color: AppTheme.errorColor)),
                             onTap: () {
                               Navigator.pop(context);
                               _bulkDelete();
@@ -737,7 +747,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   }
                 },
                 icon: const Icon(Icons.person_add_rounded),
-                label: Text(context.translate('add_worker')),
+                label: Text(context.translate('add_worker').toUpperCase(), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1)),
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.black,
               ),
@@ -761,8 +771,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Overview',
-                style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.secondaryTextColor),
+                'Overview'.toUpperCase(),
+                style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white38, letterSpacing: 1.5),
               ),
               TextButton.icon(
                 onPressed: () => Navigator.pushNamed(context, '/admin/analytics'),
@@ -795,9 +805,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -808,12 +818,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textColor,
+              color: Colors.white,
             ),
           ),
           Text(
             label,
-            style: TextStyle(color: AppTheme.secondaryTextColor, fontSize: 11),
+            style: GoogleFonts.outfit(color: Colors.white38, fontSize: 11),
           ),
         ],
       ),
@@ -827,7 +837,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       isScrollControlled: true,
       builder: (context) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF0F172A),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -840,10 +850,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               children: [
                 Text(
                   'Filters',
-                  style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close, color: Colors.white54),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -851,7 +861,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             const SizedBox(height: 20),
             
             // Role Filter
-            Text('Role', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text('Role', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.white70)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -863,8 +873,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ),
             const SizedBox(height: 20),
             
-            // Status Filter
-            Text('Status', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text('Status', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.white70)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -877,8 +886,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ),
             const SizedBox(height: 20),
             
-            // Biometric Filter
-            Text('Biometric', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14)),
+            Text('Biometric', style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.white70)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -903,6 +911,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   });
                   Navigator.pop(context);
                 },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white24),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
                 child: const Text('Clear All Filters'),
               ),
             ),
@@ -919,17 +933,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : Colors.white,
+          color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : Colors.black.withValues(alpha: 0.1),
+            color: isSelected ? AppTheme.primaryColor : Colors.white.withValues(alpha: 0.1),
             width: 1.5,
           ),
         ),
         child: Text(
           label,
           style: GoogleFonts.outfit(
-            color: isSelected ? Colors.black : AppTheme.textColor,
+            color: isSelected ? Colors.black : Colors.white70,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 13,
           ),

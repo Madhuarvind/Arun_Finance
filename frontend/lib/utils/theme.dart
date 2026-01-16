@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Fynix Premium Light Palette
-  static const Color primaryColor = Color(0xFFA6E63E); // Vibrant Lime Green
-  static const Color backgroundColor = Color(0xFFF7F9FC); // Ultra Light Grey
-  static const Color surfaceColor = Color(0xFFFFFFFF); // Pure White Cards
-  static const Color accentColor = Color(0xFF2D3142); // Navy/Dark for contrast
-  static const Color textColor = Color(0xFF1A1D1F); // Near Black
-  static const Color secondaryTextColor = Color(0xFF6F767E); // Muted Grey
-  static const Color errorColor = Color(0xFFFF6A55); // Soft Neon Red
+  // Deep Slate & Gold Palette
+  static const Color primaryColor = Color(0xFFFFC107); // Vibrant Gold
+  static const Color backgroundColor = Color(0xFF0F172A); // Deep Slate
+  static const Color surfaceColor = Color(0xFF1E293B); // Slate Surface
+  static const Color accentColor = Color(0xFF334155); // Lighter Slate for accents
+  static const Color textColor = Color(0xFFF8FAFC); // Off-white
+  static const Color secondaryTextColor = Color(0xFF94A3B8); // Slate Grey Text
+  static const Color errorColor = Color(0xFFEF4444); // Red
 
   static ThemeData lightTheme = ThemeData(
-    brightness: Brightness.light,
+    brightness: Brightness.dark, // Switched to Dark
     primaryColor: primaryColor,
     scaffoldBackgroundColor: backgroundColor,
     cardColor: surfaceColor,
-    colorScheme: const ColorScheme.light(
+    colorScheme: const ColorScheme.dark( // Switched to Dark Scheme
       primary: primaryColor,
       secondary: accentColor,
       surface: surfaceColor,
       error: errorColor,
-      onPrimary: Colors.black,
+      onPrimary: Colors.black, // Text on Gold should be black
       onSurface: textColor,
     ),
-    textTheme: GoogleFonts.outfitTextTheme().copyWith(
+    textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
       displayLarge: GoogleFonts.outfit(
         fontSize: 32,
         fontWeight: FontWeight.w900,
@@ -89,19 +89,19 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.black.withValues(alpha: 0.04)),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.black.withValues(alpha: 0.2), // Darker inputs
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(24),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(24),
-        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(24),

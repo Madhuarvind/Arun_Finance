@@ -50,49 +50,62 @@ class _EMIScheduleScreenState extends State<EMIScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('EMI Schedule', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+        title: Text('EMI Schedule', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _schedule.isEmpty
-              ? const Center(child: Text("No schedule available"))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _schedule.length,
-                  itemBuilder: (context, index) {
-                    final item = _schedule[index];
-                    final bool isPaid = item['status'] == 'paid';
-                    
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isPaid ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
-                          child: Text("${item['emi_no']}", style: TextStyle(color: isPaid ? Colors.green : Colors.orange, fontWeight: FontWeight.bold)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor))
+            : _schedule.isEmpty
+                ? const Center(child: Text("No schedule available", style: TextStyle(color: Colors.white54)))
+                : ListView.builder(
+                    padding: const EdgeInsets.only(top: 100, left: 16, right: 16, bottom: 16),
+                    itemCount: _schedule.length,
+                    itemBuilder: (context, index) {
+                      final item = _schedule[index];
+                      final bool isPaid = item['status'] == 'paid';
+                      
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                         ),
-                        title: Text("₹${item['amount']}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text("Due: ${item['due_date']}"),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isPaid ? Colors.green : Colors.orange,
-                            borderRadius: BorderRadius.circular(12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: isPaid ? Colors.greenAccent.withValues(alpha: 0.2) : Colors.orangeAccent.withValues(alpha: 0.2),
+                            child: Text("${item['emi_no']}", style: TextStyle(color: isPaid ? Colors.greenAccent : Colors.orangeAccent, fontWeight: FontWeight.bold)),
                           ),
-                          child: Text(
-                            item['status'].toUpperCase(),
-                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          title: Text("₹${item['amount']}", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white)),
+                          subtitle: Text("Due: ${item['due_date']}", style: const TextStyle(color: Colors.white54)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isPaid ? Colors.green : Colors.orange,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              item['status'].toUpperCase(),
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+      ),
     );
   }
 }

@@ -98,45 +98,59 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      appBar: AppBar(title: const Text("Edit Customer"), foregroundColor: Colors.black),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-               GestureDetector(
-                 onTap: _pickImage,
-                 child: CircleAvatar(
-                   radius: 50,
-                   backgroundColor: Colors.grey[200],
-                   backgroundImage: bgImage,
-                   child: bgImage == null ? Icon(Icons.camera_alt, size: 40, color: Colors.grey[600]) : null,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text("Edit Customer", style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)), 
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+         decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(top: 100, left: 20, right: 20, bottom: 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                 GestureDetector(
+                   onTap: _pickImage,
+                   child: CircleAvatar(
+                     radius: 50,
+                     backgroundColor: Colors.white.withValues(alpha: 0.1),
+                     backgroundImage: bgImage,
+                     child: bgImage == null ? const Icon(Icons.camera_alt, size: 40, color: Colors.white54) : null,
+                   ),
                  ),
-               ),
-               const SizedBox(height: 10),
-               Text("Tap to update photo", style: GoogleFonts.outfit(color: Colors.grey, fontSize: 12)),
-               const SizedBox(height: 20),
-               _buildField(_nameCtrl, "Name", Icons.person),
-               const SizedBox(height: 16),
-               _buildField(_mobileCtrl, "Mobile", Icons.phone, type: TextInputType.phone),
-               const SizedBox(height: 16),
-               _buildField(_areaCtrl, "Area", Icons.map),
-               const SizedBox(height: 16),
-               _buildField(_addressCtrl, "Address", Icons.home, maxLines: 2),
-               const SizedBox(height: 16),
-               _buildField(_idProofCtrl, "ID Proof", Icons.badge),
-               const SizedBox(height: 30),
-               SizedBox(
-                 width: double.infinity,
-                 height: 50,
-                 child: ElevatedButton(
-                   onPressed: _isLoading ? null : _update,
-                   child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text("Update Customer"),
-                 ),
-               )
-            ],
+                 const SizedBox(height: 10),
+                 Text("Tap to update photo", style: GoogleFonts.outfit(color: Colors.white54, fontSize: 12)),
+                 const SizedBox(height: 20),
+                 _buildField(_nameCtrl, "Name", Icons.person),
+                 const SizedBox(height: 16),
+                 _buildField(_mobileCtrl, "Mobile", Icons.phone, type: TextInputType.phone),
+                 const SizedBox(height: 16),
+                 _buildField(_areaCtrl, "Area", Icons.map),
+                 const SizedBox(height: 16),
+                 _buildField(_addressCtrl, "Address", Icons.home, maxLines: 2),
+                 const SizedBox(height: 16),
+                 _buildField(_idProofCtrl, "ID Proof", Icons.badge),
+                 const SizedBox(height: 30),
+                 SizedBox(
+                   width: double.infinity,
+                   height: 50,
+                   child: ElevatedButton(
+                     onPressed: _isLoading ? null : _update,
+                     child: _isLoading ? const CircularProgressIndicator(color: Colors.black) : const Text("Update Customer"),
+                   ),
+                 )
+              ],
+            ),
           ),
         ),
       ),
@@ -148,10 +162,17 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
       controller: ctrl,
       keyboardType: type,
       maxLines: maxLines,
+      style: const TextStyle(color: Colors.white),
       validator: (v) => v!.isEmpty ? "$label is required" : null,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
         prefixIcon: Icon(icon, color: AppTheme.primaryColor),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.05),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppTheme.primaryColor)),
       ),
     );
   }
