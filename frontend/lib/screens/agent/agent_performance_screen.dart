@@ -25,21 +25,32 @@ class _AgentPerformanceScreenState extends State<AgentPerformanceScreen> {
 
   Future<void> _fetchStats() async {
     setState(() => _isLoading = true);
-    final token = await _storage.read(key: 'jwt_token');
-    if (token != null) {
-      final data = await _apiService.getAgentStats(token);
-      if (mounted) {
-        setState(() {
-          _stats = data;
-          _isLoading = false;
-        });
+    try {
+      final token = await _storage.read(key: 'jwt_token');
+      if (token != null) {
+        final data = await _apiService.getAgentStats(token);
+        if (mounted) {
+          setState(() {
+            if (data['collected'] != null) {
+               _stats = data;
+            }
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
       }
+    } catch (e) {
+      debugPrint("Error fetching performance stats: $e");
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final double progress = (_stats['collected'] / _stats['goal']).clamp(0.0, 1.0);
+    final double collected = double.tryParse(_stats['collected']?.toString() ?? '0') ?? 0.0;
+    final double goal = double.tryParse(_stats['goal']?.toString() ?? '50000') ?? 50000.0;
+    final double progress = (goal > 0 ? (collected / goal) : 0.0).clamp(0.0, 1.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),

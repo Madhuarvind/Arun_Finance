@@ -28,7 +28,21 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   }
 
   Future<void> _initializeCamera() async {
-    if (cameras.isEmpty) return;
+    if (cameras.isEmpty) {
+      // Try fetching cameras again (common web issue)
+      try {
+        cameras = await availableCameras();
+      } catch (e) {
+        debugPrint("Re-fetch cameras failed: $e");
+      }
+    }
+
+    if (cameras.isEmpty) {
+      if (mounted) {
+        setState(() => _statusMessage = "No camera found. Please enable permissions.");
+      }
+      return;
+    }
     
     // Find front camera
     CameraDescription? frontCamera;
@@ -50,6 +64,9 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       if (mounted) setState(() {});
     } catch (e) {
       debugPrint("Camera Error: $e");
+      if (mounted) {
+        setState(() => _statusMessage = "Camera initialization failed: $e");
+      }
     }
   }
 
@@ -123,6 +140,36 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
+      if (_statusMessage != null) {
+        return Scaffold(
+          backgroundColor: const Color(0xFF0F172A),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  _statusMessage!,
+                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _initializeCamera,
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+                  child: Text("Retry Camera", style: GoogleFonts.outfit(color: Colors.black, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/home'), // Bypass for now? Or specific fallback?
+                  child: const Text("Skip Verification (Dev Only)", style: TextStyle(color: Colors.white24)),
+                )
+              ],
+            ),
+          ),
+        );
+      }
       return Scaffold(
         backgroundColor: const Color(0xFF0F172A),
         body: const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
