@@ -561,8 +561,7 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
             ),
             overflow: TextOverflow.ellipsis,
           ),
-          ],
-        ),
+        ],
       ),
     );
   }
