@@ -24,7 +24,21 @@ class _CollectionLedgerScreenState extends State<CollectionLedgerScreen> with Si
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
     _initialize();
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _handleTabChange() {
+    if (!_tabController.indexIsChanging && _tabController.index == 1) {
+       _fetchData();
+    }
   }
 
   Future<void> _initialize() async {

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Deep Slate & Gold Palette
-  static const Color primaryColor = Color(0xFFFFC107); // Vibrant Gold
+  static const Color primaryColor = Color(0xFF0EA5E9); // Electric Blue
   static const Color backgroundColor = Color(0xFF0F172A); // Deep Slate
   static const Color surfaceColor = Color(0xFF1E293B); // Slate Surface
   static const Color accentColor = Color(0xFF334155); // Lighter Slate for accents
@@ -21,7 +21,7 @@ class AppTheme {
       secondary: accentColor,
       surface: surfaceColor,
       error: errorColor,
-      onPrimary: Colors.black, // Text on Gold should be black
+      onPrimary: Colors.white, // White text on Electric Blue
       onSurface: textColor,
     ),
     textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
@@ -58,7 +58,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 32),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),

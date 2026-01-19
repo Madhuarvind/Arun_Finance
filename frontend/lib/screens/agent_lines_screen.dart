@@ -747,7 +747,7 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
     return InkWell(
       onTap: () => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => LineReportScreen(lineId: widget.line['id'], period: period)),
+        MaterialPageRoute(builder: (context) => LineReportScreen(lineId: widget.line['id'], period: period, lineName: widget.line['name'])),
       ),
       borderRadius: BorderRadius.circular(12),
       child: Container(

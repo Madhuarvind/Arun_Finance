@@ -11,8 +11,9 @@ import '../utils/theme.dart';
 class LineReportScreen extends StatefulWidget {
   final int lineId;
   final String period; // 'daily' or 'weekly'
+  final String? lineName;
 
-  const LineReportScreen({super.key, required this.lineId, required this.period});
+  const LineReportScreen({super.key, required this.lineId, required this.period, this.lineName});
 
   @override
   State<LineReportScreen> createState() => _LineReportScreenState();
@@ -214,14 +215,21 @@ class _LineReportScreenState extends State<LineReportScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_reportData!['line_name'] ?? 'Unknown Line', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 4),
-                    Text(DateFormat('dd MMMM yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 13)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          _reportData!['line_name'] ?? widget.lineName ?? 'Unknown Line', 
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), 
+                        overflow: TextOverflow.ellipsis
+                      ),
+                      const SizedBox(height: 4),
+                      Text(DateFormat('dd MMMM yyyy').format(DateTime.now()), style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),

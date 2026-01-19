@@ -496,6 +496,7 @@ class _LineCustomersScreenState extends State<LineCustomersScreen> {
         builder: (context) => LineReportScreen(
           lineId: widget.line['id'],
           period: type,
+          lineName: widget.line['name'],
         ),
       ),
     );

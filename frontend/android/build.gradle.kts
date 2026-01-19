@@ -23,3 +23,11 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+subprojects {
+    project.configurations.all {
+        resolutionStrategy {
+            force("androidx.browser:browser:1.8.0")
+        }
+    }
+}

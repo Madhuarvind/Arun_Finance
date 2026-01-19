@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.arunfinance.vasool_drive"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -574,6 +574,7 @@ class _ReportsScreenState extends State<ReportsScreen> with SingleTickerProvider
                         builder: (_) => LineReportScreen(
                           lineId: line['id'],
                           period: 'daily',
+                          lineName: line['name'],
                         ),
                       ),
                     );
