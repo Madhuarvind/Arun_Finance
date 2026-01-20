@@ -324,10 +324,14 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  context.translate('quick_actions'),
-                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                Expanded(
+                                  child: Text(
+                                    context.translate('quick_actions'),
+                                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 Icon(Icons.swipe_left_rounded, size: 16, color: Colors.white54),
                               ],
                             ),
@@ -405,13 +409,17 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  context.translate('recent_activity'),
-                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                Expanded(
+                                  child: Text(
+                                    context.translate('recent_activity'),
+                                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
                                   context.translate('track_all'),
-                                  style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 14),
+                                  style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 13), // Reduced fontSize slightly
                                 ),
                               ],
                             ),
