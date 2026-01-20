@@ -7,6 +7,7 @@ import '../main.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/theme.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class FaceEnrollmentScreen extends StatefulWidget {
   const FaceEnrollmentScreen({super.key});
@@ -100,9 +101,23 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen> {
       final token = await _storage.read(key: 'jwt_token');
       
       if (token != null) {
+        // Compress Image
+        Uint8List compressedBytes = imageBytes;
+        try {
+          compressedBytes = await FlutterImageCompress.compressWithList(
+            imageBytes,
+            minHeight: 1024,
+            minWidth: 1024,
+            quality: 70,
+          );
+        } catch (e) {
+          debugPrint("Compression Error: $e");
+          // Fallback to original if compression fails
+        }
+
         final result = await _apiService.registerFace(
           0,
-          imageBytes, 
+          compressedBytes, 
           'local_device', 
           token
         ).timeout(const Duration(seconds: 40));

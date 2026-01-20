@@ -5,6 +5,8 @@ import '../../services/api_service.dart';
 import '../../services/local_db_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../main.dart'; // To access cameras list
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter/foundation.dart';
 
 class FaceVerificationScreen extends StatefulWidget {
   final String userName;
@@ -89,9 +91,22 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       final imageBytes = await image.readAsBytes();
       final deviceId = await _localDbService.getDeviceId();
       
+      // Compress Image
+      Uint8List compressedBytes = imageBytes;
+      try {
+        compressedBytes = await FlutterImageCompress.compressWithList(
+          imageBytes,
+          minHeight: 1024,
+          minWidth: 1024,
+          quality: 70,
+        );
+      } catch (e) {
+        debugPrint("Compression Error: $e");
+      }
+
       final result = await _apiService.verifyFaceLogin(
         widget.userName,
-        imageBytes,
+        compressedBytes,
         deviceId
       );
 

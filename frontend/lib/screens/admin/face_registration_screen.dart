@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../services/language_service.dart';
 import '../../main.dart'; 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 class FaceRegistrationScreen extends StatefulWidget {
   final int userId;
@@ -112,7 +113,21 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
     try {
       setState(() => _statusMessage = "Processing image...");
       final imageBytes = await _imageFile!.readAsBytes();
-      final kb = (imageBytes.lengthInBytes / 1024).toStringAsFixed(1);
+      
+      // Compress Image
+      Uint8List compressedBytes = imageBytes;
+      try {
+        compressedBytes = await FlutterImageCompress.compressWithList(
+          imageBytes,
+          minHeight: 1024,
+          minWidth: 1024,
+          quality: 70,
+        );
+      } catch (e) {
+        debugPrint("Compression Error: $e");
+      }
+
+      final kb = (compressedBytes.lengthInBytes / 1024).toStringAsFixed(1);
       
       final token = await _apiService.getToken();
       
@@ -122,7 +137,7 @@ class _FaceRegistrationScreenState extends State<FaceRegistrationScreen> {
         
         final result = await _apiService.registerFace(
           widget.userId, 
-          imageBytes, 
+          compressedBytes, 
           'current_device_id', 
           token
         ).timeout(const Duration(seconds: 40));

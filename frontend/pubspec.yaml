@@ -57,6 +57,7 @@ dependencies:
   url_launcher: ^6.3.0
   printing: 5.14.2
   pdf: ^3.10.8
+  flutter_image_compress: ^2.1.0
 
   path: any
   file_picker: ^10.3.8
