@@ -552,12 +552,7 @@ def get_financial_stats():
 @jwt_required()
 def get_agent_stats():
     identity = get_jwt_identity()
-    user = User.query.filter(
-        (User.username == identity)
-        | (User.id == identity)
-        | (User.mobile_number == identity)
-        | (User.name == identity)
-    ).first()
+    user = get_user_by_identity(identity)
 
     if not user:
         return jsonify({"msg": "User not found"}), 404

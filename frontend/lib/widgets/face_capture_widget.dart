@@ -29,7 +29,24 @@ class _FaceCaptureWidgetState extends State<FaceCaptureWidget> {
     _initializeCamera();
   }
 
-  void _initializeCamera() {
+  Future<void> _initializeCamera() async {
+    if (cameras.isEmpty) {
+      try {
+        cameras = await availableCameras();
+      } catch (e) {
+        debugPrint("Error getting cameras: $e");
+      }
+    }
+
+    if (cameras.isEmpty) {
+      if (mounted) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text("No camera found or permission denied")),
+         );
+      }
+      return;
+    }
+
     // Use the front camera for face capture
     final frontCamera = cameras.firstWhere(
       (camera) => camera.lensDirection == CameraLensDirection.front,
@@ -42,7 +59,20 @@ class _FaceCaptureWidgetState extends State<FaceCaptureWidget> {
       enableAudio: false,
     );
 
-    _initializeControllerFuture = _controller!.initialize();
+    _initializeControllerFuture = _controller!.initialize().then((_) {
+      if (mounted) setState(() {});
+    }).catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            // Handle access errors here.
+            break;
+          default:
+            // Handle other errors here.
+            break;
+        }
+      }
+    });
   }
 
   @override
