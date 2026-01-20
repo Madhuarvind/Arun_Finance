@@ -1067,7 +1067,7 @@ def export_daybook_csv():
             c_time = c.created_at.strftime("%H:%M:%S")
             c_customer = c.loan.customer.name
             c_agent = c.agent.name
-            c_amount = c.amount_collected
+            c_amount = c.amount  # Fixed: usage of correct model attribute
             
             # Use specific payment mode if available, else derive
             # Assuming 'payment_type' or similar might exist, but using placeholder logic safely
