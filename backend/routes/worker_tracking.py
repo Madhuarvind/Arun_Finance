@@ -42,8 +42,9 @@ def get_field_map():
     if not admin:
         return jsonify({"msg": "unauthorized"}), 403
         
-    current_role = admin.role.value if hasattr(admin.role, 'value') else str(admin.role)
-    if current_role != UserRole.ADMIN.value and current_role != "admin":
+    # Robust Role Check (Handle Enum, String, Case)
+    role_val = admin.role.value if hasattr(admin.role, 'value') else str(admin.role)
+    if role_val.lower() not in ['admin', 'superadmin']:
         return jsonify({"msg": "unauthorized"}), 403
         
     # Query agents more robustly (handle enum vs string)
