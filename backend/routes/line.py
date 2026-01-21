@@ -219,23 +219,40 @@ def get_line_customers(line_id):
     # Usually a customer has one loan per line.
     
     results = []
+    results = []
     for m in customers_mapping:
         # Get active loans for this customer
         active_loans = Loan.query.filter_by(customer_id=m.customer.id, status='active').all()
         loan_summaries = []
         fully_collected = True if active_loans else False
+        total_collected_amount = 0.0
+        total_cash = 0.0
+        total_upi = 0.0
         
         for l in active_loans:
-            is_collected = Collection.query.filter(
+            todays_collections = Collection.query.filter(
                 Collection.loan_id == l.id,
                 db.func.date(Collection.created_at) == today,
                 Collection.status != 'rejected'
-            ).first() is not None
+            ).all()
+
+            collected_amount = sum(c.amount for c in todays_collections)
+            total_collected_amount += collected_amount
+            
+            # Calculate breakdown
+            for c in todays_collections:
+                if c.payment_mode and c.payment_mode.lower() == 'cash':
+                    total_cash += c.amount
+                else:
+                    total_upi += c.amount
+
+            is_collected = len(todays_collections) > 0
             
             loan_summaries.append({
                 "id": l.id,
                 "loan_id": l.loan_id,
                 "is_collected": is_collected,
+                "collected_amount": float(collected_amount),
                 "pending": l.pending_amount
             })
             if not is_collected:
@@ -248,6 +265,9 @@ def get_line_customers(line_id):
             "area": m.customer.area,
             "sequence": m.sequence_order,
             "is_collected_today": fully_collected,
+            "amount": float(total_collected_amount),
+            "amount_cash": float(total_cash),
+            "amount_upi": float(total_upi),
             "active_loans": loan_summaries,
             "loan_count": len(active_loans)
         })

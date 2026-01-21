@@ -179,23 +179,13 @@ class _LineCustomersSheetState extends State<_LineCustomersSheet> {
         // Since the UI needs to show WHO collected today, we still might want history for the amounts,
         // or we can rely on the fact that 'collected' is just for summary.
         // Let's keep a simplified history fetch just for the summary stats.
-        final history = await widget.apiService.getCollectionHistory(token);
-        final today = DateTime.now();
-
-        final dailyCollections = history.where((c) {
-          final dateStr = c['time'] ?? c['created_at'];
-          if (dateStr == null) return false;
-          try {
-            final date = DateTime.parse(dateStr).toLocal();
-            return date.year == today.year && date.month == today.month && date.day == today.day && c['status'] != 'rejected';
-          } catch(e) { return false; }
-        }).toList();
-
-        for (var c in dailyCollections) {
-          final amt = (c['amount'] ?? 0).toDouble();
-          collected += amt;
-          if (c['payment_mode'] == 'cash') cash += amt;
-          if (c['payment_mode'] == 'upi') upi += amt;
+        // Calculate totals from the updated API response (which now includes amount, amount_cash, amount_upi)
+        for (var c in custs) {
+          if (c['is_collected_today'] == true) {
+            collected += (c['amount'] ?? 0).toDouble();
+            cash += (c['amount_cash'] ?? 0).toDouble();
+            upi += (c['amount_upi'] ?? 0).toDouble();
+          }
         }
 
         // Filter out customers already in the line

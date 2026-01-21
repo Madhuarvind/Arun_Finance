@@ -475,7 +475,7 @@ def get_line_report(line_id):
             db.session.query(Collection)
             .join(Loan, Collection.loan_id == Loan.id)
             .filter(
-                Collection.line_id == line_id,
+                # Collection.line_id == line_id, # Relaxed filter to catch all collections for these customers
                 Loan.customer_id.in_(customer_ids),
                 Collection.created_at >= start_date,
                 Collection.created_at <= end_date,
