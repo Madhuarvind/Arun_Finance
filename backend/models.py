@@ -400,3 +400,15 @@ class DailyAccountingReport(db.Model):
     loan_interest = db.Column(db.Float, default=0.0)
     collection_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class LocationLog(db.Model):
+    __tablename__ = "location_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    activity = db.Column(db.String(50), default="moving")
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User", backref=db.backref("location_history", cascade="all, delete-orphan"))

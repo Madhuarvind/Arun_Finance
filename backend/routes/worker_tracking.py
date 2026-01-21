@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, User, UserRole
+from models import db, User, UserRole, LocationLog
 from datetime import datetime
 from utils.auth_helpers import get_user_by_identity
 
@@ -26,11 +26,53 @@ def update_tracking():
     if "duty_status" in data:
         user.duty_status = data["duty_status"]
         
+    activity = data.get("activity", "moving")
     if "activity" in data:
-        user.current_activity = data["activity"]
-        
+        user.current_activity = activity
+    
+    # Save to History Log
+    log = LocationLog(
+        user_id=user.id,
+        latitude=user.last_latitude,
+        longitude=user.last_longitude,
+        activity=activity,
+        timestamp=user.last_location_update
+    )
+    db.session.add(log)
+    
     db.session.commit()
     return jsonify({"msg": "tracking_updated", "status": user.duty_status}), 200
+
+@tracking_bp.route("/agent-history/<int:agent_id>", methods=["GET"])
+@jwt_required()
+def get_agent_history(agent_id):
+    """Retrieve tracking history for a specific agent (Admin only)"""
+    identity = get_jwt_identity()
+    admin = get_user_by_identity(identity)
+    
+    if not admin:
+        return jsonify({"msg": "unauthorized"}), 403
+        
+    date_str = request.args.get("date") # Optional date filter YYYY-MM-DD
+    
+    query = LocationLog.query.filter_by(user_id=agent_id)
+    
+    if date_str:
+        target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        query = query.filter(db.func.date(LocationLog.timestamp) == target_date)
+    
+    history = query.order_by(LocationLog.timestamp.asc()).all()
+    
+    result = []
+    for log in history:
+        result.append({
+            "latitude": log.latitude,
+            "longitude": log.longitude,
+            "timestamp": log.timestamp.isoformat(),
+            "activity": log.activity
+        })
+        
+    return jsonify(result), 200
 
 @tracking_bp.route("/field-map", methods=["GET"])
 @jwt_required()
