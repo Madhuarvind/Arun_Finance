@@ -511,6 +511,7 @@ def register_face():
 
         return jsonify({"msg": "face_registered_successfully"}), 201
     except Exception as e:
+        print(f"DEBUG: register_face error: {str(e)}")
         return jsonify({"msg": "server_error", "error": str(e)}), 500
 
 

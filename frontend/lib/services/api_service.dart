@@ -172,7 +172,14 @@ class ApiService {
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return {
+          'msg': 'server_error',
+          'error': decoded['error'] ?? decoded['msg'] ?? 'Status ${response.statusCode}'
+        };
+      }
+      return decoded;
     } catch (e) {
       debugPrint("API_DEBUG: registerFace connection error: $e");
       return {'msg': 'connection_failed', 'error': e.toString()};
@@ -1800,9 +1807,16 @@ class ApiService {
           'device_id': deviceId,
         }),
       ).timeout(const Duration(seconds: 15));
-      return jsonDecode(response.body);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return {
+          'msg': 'server_error',
+          'error': decoded['error'] ?? decoded['msg'] ?? 'Status ${response.statusCode}'
+        };
+      }
+      return decoded;
     } catch (e) {
-      return {'msg': 'connection_failed'};
+      return {'msg': 'connection_failed', 'error': e.toString()};
     }
   }
   Future<List<dynamic>> getAgentHistory(int agentId, String token, {String? date}) async {

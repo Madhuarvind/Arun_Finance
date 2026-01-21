@@ -130,14 +130,18 @@ class _FaceEnrollmentScreenState extends State<FaceEnrollmentScreen> {
           if (!mounted) return;
           Navigator.pop(context, true);
         } else {
-          final err = result['msg'] ?? result['error'] ?? "failure";
+          final err = result['error'] ?? result['msg'] ?? "failure";
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enrollment Error: $err")));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Enrollment Error: $err"),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 5),
+          ));
         }
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.redAccent));
     }
     if (mounted) setState(() => _isLoading = false);
   }

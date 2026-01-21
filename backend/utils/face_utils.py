@@ -6,27 +6,33 @@ import torchvision.transforms as transforms
 from PIL import Image
 
 
-# Initialize MobileNetV2 as a feature extractor
-# We use a pre-trained model and remove the classifier to get embeddings
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = models.mobilenet_v2(pretrained=True)
-model.classifier = torch.nn.Identity()  # Remove the last layer
-model.to(device)
-model.eval()
-
-# Face Detector Initialized globally for performance
+# AI components will be lazy-loaded to save memory on Render (512MB limit)
+model = None
+device = None
+transform = None
 face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
 
-# Image Transforms for MobileNet
-transform = transforms.Compose(
-    [
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ]
-)
+def _get_ai_resources():
+    global model, device, transform
+    if model is None:
+        import torchvision.models as models
+        import torchvision.transforms as transforms
+        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # Load a efficient pre-trained model
+        model = models.mobilenet_v2(pretrained=True)
+        model.classifier = torch.nn.Identity()
+        model.to(device)
+        model.eval()
+        
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+    return model, device, transform
 
 
 def generate_face_embedding(image_bytes):
@@ -80,7 +86,8 @@ def generate_face_embedding(image_bytes):
         face_rgb = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
         pil_img = Image.fromarray(face_rgb)
 
-        # Preprocess and generate embedding
+        # Preprocess and generate embedding using lazy-loaded model
+        model, device, transform = _get_ai_resources()
         input_tensor = transform(pil_img).unsqueeze(0).to(device)
 
         with torch.no_grad():
