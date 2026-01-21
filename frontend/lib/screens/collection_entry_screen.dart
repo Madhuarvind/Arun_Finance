@@ -8,6 +8,10 @@ import '../utils/localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class CollectionEntryScreen extends StatefulWidget {
   const CollectionEntryScreen({super.key});
@@ -32,6 +36,14 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
   Position? _currentPosition;
   Map<String, dynamic> _systemSettings = {};
   int? _lineId;
+
+  // Audio Recording
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  bool _isRecording = false;
+  String? _recordedPath;
+  String? _transcription;
+  int? _audioNoteId;
+  bool _isUploadingAudio = false;
 
   @override
   void initState() {
@@ -140,6 +152,27 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
       'created_at': DateTime.now().toIso8601String(),
     };
 
+    final token = await _storage.read(key: 'jwt_token');
+    if (token == null) return;
+
+    // Upload audio note if exists
+    if (_recordedPath != null) {
+      setState(() => _isUploadingAudio = true);
+      final audioResult = await _apiService.uploadAudioNote(
+        filePath: _recordedPath!,
+        token: token,
+        customerId: _selectedCustomer?['id'],
+        loanId: _selectedLoan?['id'],
+      );
+      if (mounted) {
+        setState(() {
+          _isUploadingAudio = false;
+          _transcription = audioResult['transcription'];
+          _audioNoteId = audioResult['id'];
+        });
+      }
+    }
+
     try {
       final token = await _storage.read(key: 'jwt_token');
       if (token == null) return;
@@ -151,6 +184,7 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
         lineId: _lineId,
         latitude: collectionData['latitude'] as double?,
         longitude: collectionData['longitude'] as double?,
+        audioNoteId: _audioNoteId,
         token: token,
       );
 
@@ -712,8 +746,141 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 24),
+        _buildVoiceNoteSection(),
       ],
     );
+  }
+
+  Widget _buildVoiceNoteSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.mic_none_rounded, color: Colors.white54, size: 18),
+              const SizedBox(width: 12),
+              Text("AI VOICE FIELD NOTE", style: GoogleFonts.outfit(color: Colors.white24, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.2)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_recordedPath == null)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isRecording ? _stopRecording : _startRecording,
+                icon: Icon(_isRecording ? Icons.stop_rounded : Icons.mic_rounded, color: _isRecording ? Colors.redAccent : Colors.black),
+                label: Text(_isRecording ? "STOP RECORDING" : "TAP TO RECORD UPDATE", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: _isRecording ? Colors.redAccent : Colors.black)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isRecording ? Colors.redAccent.withValues(alpha: 0.1) : AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.greenAccent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 16),
+                        const SizedBox(width: 8),
+                        Text("Recording Saved", style: GoogleFonts.outfit(color: Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () => setState(() => _recordedPath = null),
+                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.white38),
+                ),
+              ],
+            ),
+          if (_isRecording)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Center(child: Text("Recording in progress...", style: GoogleFonts.outfit(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold))),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startRecording() async {
+    try {
+      final status = await Permission.microphone.request();
+      if (status == PermissionStatus.permanentlyDenied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Microphone permission permanently denied. Please enable in settings."),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
+      if (status != PermissionStatus.granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Microphone permission is required to record voice notes.")),
+          );
+        }
+        return;
+      }
+
+      if (await _audioRecorder.isRecording()) {
+        await _audioRecorder.stop();
+      }
+
+      final dir = await getTemporaryDirectory();
+      final path = '${dir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+      const config = RecordConfig();
+      await _audioRecorder.start(config, path: path);
+      setState(() => _isRecording = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error starting recorder: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      final path = await _audioRecorder.stop();
+      setState(() {
+        _isRecording = false;
+        _recordedPath = path;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error stopping recorder: $e"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioRecorder.dispose();
+    _amountController.dispose();
+    super.dispose();
   }
 
   Widget _buildReviewRow(String label, String value, {bool isTitle = false}) {
@@ -736,3 +903,4 @@ class _CollectionEntryScreenState extends State<CollectionEntryScreen> {
     );
   }
 }
+

@@ -451,6 +451,56 @@ class ApiService {
 
 
 
+  Future<Map<String, dynamic>> restructureLoan(int loanId, Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBase/loan/$loanId/restructure'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data),
+      ).timeout(const Duration(seconds: 10));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> addPenalty(int emiId, double amount, String notes, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBase/loan/emi/$emiId/penalty'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'amount': amount,
+          'notes': notes
+        }),
+      ).timeout(const Duration(seconds: 10));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed: $e'};
+    }
+  }
+
+  Future<List<dynamic>> getRecoveryForecast(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/loan/recovery-forecast'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<Map<String, dynamic>> forecloseLoan(int loanId, double amount, String reason, String token) async {
     try {
       final response = await http.post(
@@ -573,6 +623,7 @@ class ApiService {
     int? lineId,
     double? latitude,
     double? longitude,
+    int? audioNoteId,
     required String token,
   }) async {
     try {
@@ -589,6 +640,7 @@ class ApiService {
           'line_id': lineId,
           'latitude': latitude,
           'longitude': longitude,
+          'audio_note_id': audioNoteId,
         }),
       ).timeout(const Duration(seconds: 10));
       debugPrint('SubmitCollection Response: ${response.statusCode}');
@@ -1713,6 +1765,92 @@ class ApiService {
     } catch (e) {
       debugPrint('getLineSummaryReport Error: $e');
       return {'msg': 'connection_failed'};
+    }
+  }
+
+  // --- Financial Command Center ---
+  Future<Map<String, dynamic>> getFinancialSummary(String token, {String period = 'today'}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/finance/pl-summary?period=$period'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return {'msg': 'server_error', 'code': response.statusCode};
+    } catch (e) {
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  Future<Map<String, dynamic>> addExpense(Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiBase/finance/expenses'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data),
+      ).timeout(const Duration(seconds: 15));
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  Future<List<dynamic>> getExpenses(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/finance/expenses'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // --- AI Voice Field Notes ---
+  Future<Map<String, dynamic>> uploadAudioNote({
+    required String filePath,
+    required String token,
+    int? customerId,
+    int? loanId,
+  }) async {
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse('$_apiBase/audio/upload'));
+      request.headers['Authorization'] = 'Bearer $token';
+      if (customerId != null) request.fields['customer_id'] = customerId.toString();
+      if (loanId != null) request.fields['loan_id'] = loanId.toString();
+
+      request.files.add(await http.MultipartFile.fromPath('file', filePath));
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      return jsonDecode(response.body);
+    } catch (e) {
+      debugPrint("uploadAudioNote Error: $e");
+      return {'msg': 'connection_failed'};
+    }
+  }
+
+  Future<List<dynamic>> getAudioHistory(int customerId, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_apiBase/audio/history?customer_id=$customerId'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 

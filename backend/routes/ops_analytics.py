@@ -59,14 +59,12 @@ def auto_assign_workers():
         }), 400
 
     # 3. Prepare data for optimization engine
-    # Use area averages as proxy for missing coordinates
     gps_custs = [c for c in customers_list if c.latitude and c.longitude]
     avg_lat = sum(c.latitude for c in gps_custs) / len(gps_custs) if gps_custs else 12.9716
     avg_lng = sum(c.longitude for c in gps_custs) / len(gps_custs) if gps_custs else 77.5946
 
     optimized_workers = []
     for w in workers_list:
-        # Check if worker has assigned_customers relationship
         w_custs = []
         if hasattr(w, 'assigned_customers'):
             w_custs = [c for c in (w.assigned_customers or []) if c.latitude]
@@ -94,7 +92,7 @@ def auto_assign_workers():
     if not assignments:
         return jsonify({"msg": "optimization_failed"}), 500
 
-    # 5. apply Assignments (Dry Run option?)
+    # 5. apply Assignments
     dry_run = data.get("dry_run", False)
     if not dry_run:
         for assign in assignments:
@@ -117,18 +115,15 @@ def auto_assign_workers():
 def get_budget_suggestion():
     total_fund = float(request.args.get("fund", 1000000))
     
-    # Simple logic: group loans by type or area to suggest limits
-    # For now, let's group by AREA as 'categories'
     areas = db.session.query(Customer.area).filter(Customer.area.isnot(None)).filter(Customer.area != '').distinct().all()
     categories = []
     
-    # Mock data with more variation to ensure IP finds a solution
     for i, (area_name,) in enumerate(areas):
         categories.append({
             'id': area_name,
             'name': area_name,
-            'roi': 12.0 + (i * 2), # Vary ROI
-            'risk_weight': 0.05 + (i * 0.05) # Vary Risk
+            'roi': 12.0 + (i * 2),
+            'risk_weight': 0.05 + (i * 0.05)
         })
 
     if not categories:
@@ -141,3 +136,42 @@ def get_budget_suggestion():
         "fund_limit": total_fund,
         "suggestions": suggestion
     }), 200
+
+@ops_bp.route("/optimized-route", methods=["GET"])
+@jwt_required()
+def get_optimized_route():
+    """Returns a GPS-optimized list of customers for the current agent"""
+    identity = get_jwt_identity()
+    from utils.auth_helpers import get_user_by_identity
+    user = get_user_by_identity(identity)
+           
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+        
+    start_lat = request.args.get("lat", type=float)
+    start_lon = request.args.get("lon", type=float)
+    
+    if start_lat is None or start_lon is None:
+        start_lat, start_lon = 12.9716, 77.5946
+        
+    customers = Customer.query.join(Loan).filter(
+        Customer.assigned_worker_id == user.id,
+        Loan.status == 'active'
+    ).all()
+    
+    cust_data = []
+    for c in customers:
+        cust_data.append({
+            "id": c.id,
+            "name": c.name,
+            "address": c.address,
+            "area": c.area,
+            "latitude": c.latitude,
+            "longitude": c.longitude,
+            "mobile": c.mobile_number
+        })
+        
+    from utils.route_optimizer import optimize_route
+    optimized = optimize_route(start_lat, start_lon, cust_data)
+    
+    return jsonify(optimized), 200

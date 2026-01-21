@@ -208,6 +208,9 @@ def get_loan(id):
                 "start_date": (
                     loan.start_date.isoformat() + "Z" if loan.start_date else None
                 ),
+                "recovery_score": loan.recovery_score,
+                "recovery_level": loan.get_recovery_level(),
+                "parent_loan_id": loan.parent_loan_id,
                 "emi_schedule": schedule,
             }
         ),
@@ -285,6 +288,151 @@ def foreclose_loan(id):
         return jsonify({"msg": str(e)}), 500
 
 
+@loan_bp.route("/<int:id>/restructure", methods=["POST"])
+@jwt_required()
+def restructure_loan(id):
+    """Closes an old loan and opens a new one with the remaining balance"""
+    identity = get_jwt_identity()
+    user = get_user_by_identity(identity)
+    
+    # Check Admin
+    current_role = user.role.value if hasattr(user.role, 'value') else str(user.role)
+    if current_role != "admin":
+        return jsonify({"msg": "Admin access required"}), 403
+
+    old_loan = Loan.query.get_or_404(id)
+    if old_loan.status != "active":
+        return jsonify({"msg": "Only active loans can be restructured"}), 400
+
+    data = request.get_json()
+    new_interest_rate = data.get("interest_rate", old_loan.interest_rate)
+    new_tenure = data.get("tenure", old_loan.tenure)
+    new_tenure_unit = data.get("tenure_unit", old_loan.tenure_unit)
+    remarks = data.get("remarks", "Loan Restructured")
+
+    try:
+        # 1. Close Old Loan
+        remaining_balance = old_loan.pending_amount
+        old_loan.status = "closed"
+        old_loan.restructured_at = datetime.utcnow()
+        
+        # 2. Create New Restructured Loan
+        year = datetime.utcnow().year
+        count = Loan.query.count()
+        loan_id_str = f"LN-{year}-RS-{count + 1:04d}" # RS for Restructured
+
+        new_loan = Loan(
+            loan_id=loan_id_str,
+            customer_id=old_loan.customer_id,
+            principal_amount=remaining_balance,
+            interest_rate=new_interest_rate,
+            interest_type=old_loan.interest_type,
+            tenure=new_tenure,
+            tenure_unit=new_tenure_unit,
+            pending_amount=remaining_balance,
+            status="created", # Needs approval/activation like any other loan
+            created_by=user.id,
+            parent_loan_id=old_loan.id,
+            created_at=datetime.utcnow(),
+        )
+        db.session.add(new_loan)
+        db.session.flush()
+
+        # Audit Logs
+        db.session.add(LoanAuditLog(
+            loan_id=old_loan.id,
+            action="LOAN_RESTRUCTURED_OUT",
+            performed_by=user.id,
+            old_status="active",
+            new_status="closed",
+            remarks=f"Balance of {remaining_balance} moved to {loan_id_str}"
+        ))
+        
+        db.session.add(LoanAuditLog(
+            loan_id=new_loan.id,
+            action="LOAN_RESTRUCTURED_IN",
+            performed_by=user.id,
+            new_status="created",
+            remarks=f"Created from restructured loan {old_loan.loan_id}"
+        ))
+
+        db.session.commit()
+        return jsonify({
+            "msg": "Loan restructured successfully",
+            "new_loan_id": new_loan.id,
+            "new_loan_number": loan_id_str
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": str(e)}), 500
+
+
+@loan_bp.route("/emi/<int:emi_id>/penalty", methods=["POST"])
+@jwt_required()
+def add_penalty(emi_id):
+    """Adds a penalty fee to a specific EMI"""
+    identity = get_jwt_identity()
+    user = get_user_by_identity(identity)
+    
+    emi = EMISchedule.query.get_or_404(emi_id)
+    data = request.get_json()
+    amount = data.get("amount", 0.0)
+    notes = data.get("notes")
+
+    try:
+        emi.penalty_amount += amount
+        if notes:
+            emi.emi_notes = (emi.emi_notes + "\n" + notes) if emi.emi_notes else notes
+        
+        # Update loan pending amount
+        loan = emi.loan
+        loan.pending_amount += amount
+        
+        db.session.add(LoanAuditLog(
+            loan_id=loan.id,
+            action="PENALTY_ADDED",
+            performed_by=user.id,
+            remarks=f"Added ₹{amount} to EMI #{emi.emi_no}. Reason: {notes}"
+        ))
+        
+        db.session.commit()
+        return jsonify({"msg": f"Penalty of ₹{amount} added successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": str(e)}), 500
+
+
+@loan_bp.route("/recovery-forecast", methods=["GET"])
+@jwt_required()
+def get_recovery_forecast():
+    """AI-based recovery forecast for all active loans"""
+    active_loans = Loan.query.filter_by(status="active").all()
+    
+    forecasts = []
+    for loan in active_loans:
+        # Placeholder AI Score logic:
+        # High score if no overdue EMIs, Low if missed collections.
+        overdue_count = EMISchedule.query.filter_by(loan_id=loan.id, status="overdue").count()
+        
+        # Basic scoring: starts at 1.0, drops 0.2 for each overdue installment
+        score = max(0.1, 1.0 - (overdue_count * 0.2))
+        loan.recovery_score = score
+        
+        forecasts.append({
+            "loan_id": loan.loan_id,
+            "customer_name": loan.customer.name,
+            "principal": loan.principal_amount,
+            "pending": loan.pending_amount,
+            "score": round(score, 2),
+            "level": loan.get_recovery_level(),
+            "overdue_installments": overdue_count
+        })
+    
+    db.session.commit() # Save the updated scores
+    return jsonify(forecasts), 200
+
+
 @loan_bp.route("/all", methods=["GET"])
 @jwt_required()
 def get_all_loans():
@@ -310,6 +458,7 @@ def get_all_loans():
             {
                 "id": loan.id,
                 "loan_id": loan.loan_id,
+                "customer_id": loan.customer_id,
                 "customer_name": loan.customer.name if loan.customer else "Unknown",
                 "principal_amount": loan.principal_amount,
                 "interest_rate": loan.interest_rate,
@@ -317,6 +466,8 @@ def get_all_loans():
                 "tenure": loan.tenure,
                 "tenure_unit": loan.tenure_unit,
                 "status": loan.status,
+                "recovery_score": loan.recovery_score,
+                "recovery_level": loan.get_recovery_level(),
                 "created_at": loan.created_at.isoformat() + "Z",
             }
             for loan in loans

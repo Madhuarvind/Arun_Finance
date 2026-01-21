@@ -43,6 +43,13 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires access to the microphone to record AI Voice Field Notes during collection entry.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera to scan customer QR codes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library to upload customer documents.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>

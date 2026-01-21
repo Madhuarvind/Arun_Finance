@@ -1,57 +1,105 @@
-
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:workmanager/workmanager.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_service.dart';
 import 'local_db_service.dart';
+import 'package:flutter/foundation.dart';
 
 class SyncService {
+  static const String syncTaskName = "com.vasooldrive.syncTask";
   final ApiService _apiService = ApiService();
   final LocalDbService _localDb = LocalDbService();
-  final FlutterSecureStorage _storage = FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage();
 
-  Future<void> syncCollections() async {
-    if (kIsWeb) return;
+  static void callbackDispatcher() {
+    Workmanager().executeTask((task, inputData) async {
+      final syncService = SyncService();
+      await syncService.performSync();
+      return true;
+    });
+  }
 
-    debugPrint('=== SyncService: Checking for pending collections... ===');
-    final pending = await _localDb.getPendingCollections();
+  Future<void> init() async {
+    Workmanager().initialize(callbackDispatcher, isInDebugMode: kDebugMode);
     
-    if (pending.isEmpty) {
-      debugPrint('=== SyncService: No pending collections ===');
-      return;
-    }
+    // Listen for connectivity changes to trigger immediate sync
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      if (results.isNotEmpty && results.first != ConnectivityResult.none) {
+        performSync();
+      }
+    });
 
-    debugPrint('=== SyncService: Found ${pending.length} pending collections ===');
+    // Schedule periodic sync every 15 mins
+    Workmanager().registerPeriodicTask(
+      "1",
+      syncTaskName,
+      frequency: const Duration(minutes: 15),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+    );
+  }
+
+  Future<void> performSync() async {
+    debugPrint("=== STARTING SYNC PROCESS ===");
     final token = await _storage.read(key: 'jwt_token');
-    if (token == null) {
-      debugPrint('=== SyncService: No token, cannot sync ===');
-      return;
-    }
+    if (token == null) return;
 
-    for (var item in pending) {
+    // 1. Sync Customers
+    final pendingCustomers = await _localDb.getPendingCustomers();
+    for (var cust in pendingCustomers) {
       try {
-        debugPrint('Syncing collection local_id: ${item['local_id']}...');
-        final result = await _apiService.submitCollection(
-          loanId: item['loan_id'],
-          amount: item['amount'],
-          paymentMode: item['payment_mode'],
-          latitude: item['latitude'],
-          longitude: item['longitude'],
-          token: token,
-        );
-
-        if (result.containsKey('msg') && 
-           (result['msg'] == 'collection_submitted_successfully' || 
-            result['msg'].toString().contains('Duplicate'))) { // Handle duplicate gracefully
-           
-           await _localDb.markCollectionSynced(item['local_id']);
-           debugPrint('Collection ${item['local_id']} synced successfully');
-           
-        } else {
-           debugPrint('Collection ${item['local_id']} sync failed: ${result['msg']}');
+        final result = await _apiService.createCustomer(cust, token);
+        if (result['id'] != null) {
+          await _localDb.updateCustomerSyncStatus(
+            int.parse(cust['local_id']), 
+            result['id'], 
+            result['customer_id']
+          );
         }
       } catch (e) {
-        debugPrint('Collection ${item['local_id']} sync error: $e');
+        debugPrint("Sync Customer Error: $e");
       }
     }
+
+    // 2. Sync Loans
+    final pendingLoans = await _localDb.getPendingLoans();
+    for (var loan in pendingLoans) {
+      try {
+        final result = await _apiService.createLoan(loan, token);
+        if (result['id'] != null) {
+          await _localDb.markLoanSynced(
+            loan['local_id'], 
+            result['id'], 
+            result['loan_id']
+          );
+        }
+      } catch (e) {
+         debugPrint("Sync Loan Error: $e");
+      }
+    }
+
+    // 3. Sync Collections
+    final pendingCollections = await _localDb.getPendingCollections();
+    for (var col in pendingCollections) {
+      try {
+        final result = await _apiService.submitCollection(
+          loanId: col['loan_id'],
+          amount: col['amount'].toDouble(),
+          paymentMode: col['payment_mode'],
+          token: token,
+          latitude: col['latitude'],
+          longitude: col['longitude']
+        );
+        if (result['msg']?.contains('success') ?? false) {
+          await _localDb.markCollectionSynced(col['local_id']);
+        }
+      } catch (e) {
+        debugPrint("Sync Collection Error: $e");
+      }
+    }
+    
+    debugPrint("=== SYNC PROCESS COMPLETED ===");
   }
 }

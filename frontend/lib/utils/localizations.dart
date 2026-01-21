@@ -264,6 +264,8 @@ class AppLocalizations {
       'view_map': 'View Map',
       'view_starting_point': 'View Starting Point',
       'no_movement_history': 'No movement history found for today',
+      'active_loans': 'Active Loans',
+      'active_lines': 'Active Lines',
     },
     'ta': {
       'app_title': 'வசூல் டிரைவ்',
@@ -520,6 +522,8 @@ class AppLocalizations {
       'view_map': 'வரைபடத்தில் காண்க',
       'view_starting_point': 'தொடக்க இடத்தைக் காண்க',
       'no_movement_history': 'இன்று பயண வரலாறு எதுவும் இல்லை',
+      'active_loans': 'செயலில் உள்ள கடன்கள்',
+      'active_lines': 'செயலில் உள்ள வரிகள்',
     },
   };
 

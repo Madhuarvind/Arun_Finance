@@ -345,6 +345,21 @@ class LocalDbService {
      await db.update('collections', {'is_synced': 1}, where: 'local_id = ?', whereArgs: [localId]);
   }
 
+  Future<void> markLoanSynced(int localId, int serverId, String loanId) async {
+    if (kIsWeb) return;
+    final db = await database;
+    await db.update(
+      'loans',
+      {
+        'server_id': serverId,
+        'loan_id': loanId,
+        'is_synced': 1
+      },
+      where: 'local_id = ?',
+      whereArgs: [localId],
+    );
+  }
+
   Future<String> getDeviceId() async {
     final prefs = await SharedPreferences.getInstance();
     String? deviceId = prefs.getString('device_id');

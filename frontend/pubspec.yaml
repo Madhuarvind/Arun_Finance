@@ -58,6 +58,10 @@ dependencies:
   printing: 5.14.2
   pdf: ^3.10.8
   flutter_image_compress: ^2.1.0
+  record: ^5.1.0
+  permission_handler: ^11.3.1
+  connectivity_plus: ^6.0.3
+  workmanager: ^0.5.2
 
   path: any
   file_picker: ^10.3.8
