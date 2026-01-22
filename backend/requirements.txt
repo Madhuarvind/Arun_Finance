@@ -21,5 +21,3 @@ pymysql==1.1.0
 fpdf==1.7.2
 pulp==2.7.0
 opencv-python-headless==4.10.0.84
-SpeechRecognition==3.10.0
-pydub==0.25.1

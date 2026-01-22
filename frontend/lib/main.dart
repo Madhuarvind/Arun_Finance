@@ -41,9 +41,6 @@ import 'screens/admin/daily_reports_screen.dart';
 import 'screens/admin/live_tracking_screen.dart';
 import 'screens/face_enrollment_screen.dart';
 import 'screens/common/upi_payment_screen.dart';
-import 'screens/admin/admin_loan_management_screen.dart';
-import 'screens/admin/financial_command_center.dart';
-import 'services/sync_service.dart';
 
 late List<CameraDescription> cameras;
 
@@ -55,10 +52,6 @@ Future<void> main() async {
     cameras = [];
     debugPrint("Cameras not initialized: $e");
   }
-
-  // Initialize Background Sync Engine
-  final syncService = SyncService();
-  await syncService.init();
   runApp(
     MultiProvider(
       providers: [
@@ -164,8 +157,6 @@ class VasoolDriveApp extends StatelessWidget {
         '/admin/db_viewer': (context) => const DatabaseViewerScreen(),
         '/admin/daily_reports': (context) => const DailyReportsScreen(),
         '/admin/tracking': (context) => const LiveTrackingScreen(),
-        '/admin/loan_management': (context) => const AdminLoanManagementScreen(),
-        '/admin/financial_center': (context) => const FinancialCommandCenter(),
         '/worker/performance': (context) => const AgentPerformanceScreen(),
         '/agent/collections': (context) => const AgentCollectionHistoryScreen(),
         '/public/passbook': (context) {

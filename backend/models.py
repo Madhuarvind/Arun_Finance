@@ -180,11 +180,6 @@ class Loan(db.Model):
 
     start_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Advanced Intelligence
-    parent_loan_id = db.Column(db.Integer, db.ForeignKey("loans.id"), nullable=True)
-    recovery_score = db.Column(db.Float, default=1.0) # 0.0 to 1.0 (Probability of full repayment)
-    restructured_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     customer = db.relationship(
@@ -199,14 +194,6 @@ class Loan(db.Model):
     documents = db.relationship(
         "LoanDocument", backref="loan", cascade="all, delete-orphan"
     )
-    
-    # Restructuring Relationship
-    parent_loan = db.relationship("Loan", remote_side="Loan.id", backref="restructured_child")
-
-    def get_recovery_level(self):
-        if self.recovery_score >= 0.8: return "HIGH"
-        if self.recovery_score >= 0.5: return "MEDIUM"
-        return "LOW"
 
 
 class EMISchedule(db.Model):
@@ -219,13 +206,7 @@ class EMISchedule(db.Model):
     principal_part = db.Column(db.Float, nullable=False)
     interest_part = db.Column(db.Float, nullable=False)
     balance = db.Column(db.Float, nullable=False)
-    penalty_amount = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(20), default="pending")  # 'pending', 'paid', 'overdue'
-    emi_notes = db.Column(db.Text, nullable=True)
-
-    @property
-    def total_due(self):
-        return self.amount + self.penalty_amount
 
 
 class LoanAuditLog(db.Model):
@@ -431,43 +412,3 @@ class LocationLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship("User", backref=db.backref("location_history", cascade="all, delete-orphan"))
-
-
-class ExpenseCategory(enum.Enum):
-    POL = "petrol_oil_lubricants"
-    SALARY = "salary"
-    RENT = "rent"
-    COMMISSION = "commission"
-    OFFICE_EXPENSE = "office_expense"
-    MISC = "miscellaneous"
-
-
-class Expense(db.Model):
-    __tablename__ = "expenses"
-    id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.Enum(ExpenseCategory), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    recorded_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    expense_date = db.Column(db.Date, default=datetime.utcnow().date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    recorder = db.relationship("User", foreign_keys=[recorded_by])
-
-
-class AudioNote(db.Model):
-    __tablename__ = "audio_notes"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    customer_id = db.Column(db.Integer, db.ForeignKey("customers.id"), nullable=True)
-    loan_id = db.Column(db.Integer, db.ForeignKey("loans.id"), nullable=True)
-    file_path = db.Column(db.String(255), nullable=False)
-    transcription = db.Column(db.Text, nullable=True)
-    sentiment = db.Column(db.String(20), nullable=True)  # 'distressed', 'evasive', 'positive', 'neutral'
-    collection_id = db.Column(db.Integer, db.ForeignKey("collections.id"), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user = db.relationship("User", backref="audio_notes_history")
-    customer = db.relationship("Customer", backref="customer_audio_notes")
-    loan = db.relationship("Loan", backref="loan_audio_notes")
-    collection = db.relationship("Collection", backref=db.backref("audio_note", uselist=False))

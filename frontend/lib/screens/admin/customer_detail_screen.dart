@@ -8,7 +8,6 @@ import 'add_loan_screen.dart';
 import 'emi_schedule_screen.dart';
 import 'loan_documents_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:intl/intl.dart';
 
 class CustomerDetailScreen extends StatefulWidget {
   final int customerId;
@@ -25,7 +24,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   Map<String, dynamic>? _customer;
   Map<String, dynamic>? _riskAnalysis;
   Map<String, dynamic>? _behaviorAnalysis;
-  List<dynamic> _audioNotes = [];
   String? _userRole;
   bool _isLoading = true;
 
@@ -44,14 +42,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         final role = await _storage.read(key: 'user_role');
         final risk = await _apiService.getRiskScore(widget.customerId, token);
         final behavior = await _apiService.getCustomerBehaviorAnalytics(widget.customerId, token);
-        final audio = await _apiService.getAudioHistory(widget.customerId, token);
         if (mounted) {
           setState(() {
             _customer = data;
             _userRole = role;
             _riskAnalysis = risk;
             _behaviorAnalysis = behavior;
-            _audioNotes = audio;
             _isLoading = false;
           });
         }
@@ -237,12 +233,6 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     // Loan Section
                     _buildLoanSection(),
                     const SizedBox(height: 20),
-
-                    // AI Voice Notes Section
-                    if (_audioNotes.isNotEmpty) ...[
-                      _buildAudioNotesSection(),
-                      const SizedBox(height: 20),
-                    ],
 
                     // Info Cards
                    _buildInfoCard(Icons.phone, "Mobile", _customer!['mobile']),
@@ -928,148 +918,5 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         ],
       ),
     );
-  }
-
-  Widget _buildAudioNotesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("AI FIELD NOTES", style: GoogleFonts.outfit(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: AppTheme.primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-              child: Text("${_audioNotes.length} RECORDED", style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontSize: 8, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 140,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _audioNotes.length,
-            itemBuilder: (context, index) {
-              final note = _audioNotes[index];
-              final sentiment = note['sentiment']?.toString().toLowerCase() ?? 'neutral';
-              final color = _getSentimentColor(sentiment);
-              
-              return GestureDetector(
-                onTap: () => _showTranscriptionDetail(note),
-                child: Container(
-                  width: 200,
-                  margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(_getSentimentIcon(sentiment), color: color, size: 16),
-                          const SizedBox(width: 8),
-                          Text(sentiment.toUpperCase(), style: GoogleFonts.outfit(color: color, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
-                          const Spacer(),
-                          Text(_formatAudioDate(note['created_at']), style: GoogleFonts.outfit(color: Colors.white24, fontSize: 10)),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: Text(
-                          note['transcription'] ?? "No transcription available",
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13, height: 1.3),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showTranscriptionDetail(Map<String, dynamic> note) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1E293B),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(_getSentimentIcon(note['sentiment']), color: _getSentimentColor(note['sentiment']), size: 24),
-                const SizedBox(width: 12),
-                Text("Field Note Detail", style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(_formatAudioDate(note['created_at'], full: true), style: GoogleFonts.outfit(color: Colors.white38, fontSize: 12)),
-            const SizedBox(height: 24),
-            Text(
-              note['transcription'] ?? "No transcription available",
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, height: 1.5),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text("CLOSE"),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getSentimentColor(String? sentiment) {
-    switch (sentiment?.toLowerCase()) {
-      case 'distressed': return Colors.redAccent;
-      case 'evasive': return Colors.orangeAccent;
-      case 'positive': return Colors.greenAccent;
-      default: return Colors.blueAccent;
-    }
-  }
-
-  IconData _getSentimentIcon(String? sentiment) {
-    switch (sentiment?.toLowerCase()) {
-      case 'distressed': return Icons.mood_bad_rounded;
-      case 'evasive': return Icons.warning_amber_rounded;
-      case 'positive': return Icons.sentiment_satisfied_alt_rounded;
-      default: return Icons.notes_rounded;
-    }
-  }
-
-  String _formatAudioDate(String? iso, {bool full = false}) {
-    if (iso == null) return "N/A";
-    try {
-      final dt = DateTime.parse(iso).toLocal();
-      if (full) return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
-      return DateFormat('dd MMM').format(dt);
-    } catch (e) {
-      return "N/A";
-    }
   }
 }

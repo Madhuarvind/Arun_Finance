@@ -40,7 +40,6 @@ def submit_collection():
     latitude = data.get("latitude")
     longitude = data.get("longitude")
     line_id = data.get("line_id")
-    audio_note_id = data.get("audio_note_id")
 
     if not loan_id or amount is None:
         return jsonify({"msg": "Missing required fields"}), 400
@@ -170,12 +169,6 @@ def submit_collection():
         db.session.add(audit_fraud)
 
     db.session.add(new_collection)
-    db.session.flush()  # To get new_collection.id
-
-    if audio_note_id:
-        audio_note = AudioNote.query.get(audio_note_id)
-        if audio_note:
-            audio_note.collection_id = new_collection.id
 
     # 3. Allocating Payment to EMIs (The "Brain")
     # ONLY apply financial impact if status is approved (Manual or AI)
@@ -676,18 +669,14 @@ def get_collection_history():
                 {
                     "id": c.id,
                     "amount": c.amount,
-                    "loan_id": c.loan_id,
-                    "customer_id": c.loan.customer_id if c.loan else None,
                     "status": c.status,
-                    "time": c.created_at.isoformat() + "Z",
+                    "time": c.created_at.isoformat(),
                     "customer_name": (
                         c.loan.customer.name
                         if hasattr(c, "loan") and c.loan and c.loan.customer
                         else "Unknown"
                     ),
                     "payment_mode": c.payment_mode,
-                    "transcription": c.audio_note.transcription if c.audio_note else None,
-                    "sentiment": c.audio_note.sentiment if c.audio_note else None,
                 }
                 for c in history
             ]

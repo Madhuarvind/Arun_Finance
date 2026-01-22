@@ -34,7 +34,6 @@ def get_kpi_stats():
 
     try:
         total_customers = Customer.query.count()
-        total_lines = Line.query.count()
         active_loans = Loan.query.filter_by(status="active").count()
 
         # Disbursed (Total Principal)
@@ -72,7 +71,6 @@ def get_kpi_stats():
             jsonify(
                 {
                     "total_customers": total_customers,
-                    "total_lines": total_lines,
                     "active_loans": active_loans,
                     "total_disbursed": float(total_disbursed),
                     "total_collected": float(total_collected),
